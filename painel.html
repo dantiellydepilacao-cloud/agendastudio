@@ -212,6 +212,15 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
       <div class="bv-sub" id="bv-sub">Carregando seus dados...</div>
     </div>
 
+    <!-- LINK DE AGENDAMENTO -->
+    <div style="background:var(--verde-cream);border:1.5px solid var(--verde-pale);border-radius:1.2rem;padding:1.2rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;">
+      <div>
+        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.3rem;">🔗 Seu link de agendamento</div>
+        <div id="link-agendamento" style="font-size:.82rem;color:var(--verde-dark);word-break:break-all;"></div>
+      </div>
+      <button onclick="copiarLink()" style="background:var(--verde-xdark);color:var(--white);border:none;border-radius:.7rem;padding:.55rem 1.2rem;font-size:.8rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">📋 Copiar link</button>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card destaque">
         <div class="stat-num" id="stat-hoje">0</div>
@@ -414,6 +423,11 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('painel-wrap').style.display = 'block';
 
+    // Link de agendamento
+    const linkAg = `https://agendastudio.vercel.app/agendar.html?id=${user.uid}`;
+    document.getElementById('link-agendamento').textContent = linkAg;
+    window._linkAgendamento = linkAg;
+
     carregarAgendamentos();
     carregarBloqueios();
     carregarConfig();
@@ -427,6 +441,12 @@ const HORARIOS_PADRAO = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00'
 const DIAS_SEMANA = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 
 function uid() { return window._uid; }
+
+function copiarLink() {
+  navigator.clipboard.writeText(window._linkAgendamento).then(() => {
+    showToast('✅ Link copiado!');
+  });
+}
 
 // LOGIN
 async function fazerLogin() {
@@ -652,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bloquear-data').value = hoje;
 });
 
+window.copiarLink = copiarLink;
 window.mudarAba = mudarAba;
 window.fazerLogin = fazerLogin;
 window.enviarRecuperacao = enviarRecuperacao;
