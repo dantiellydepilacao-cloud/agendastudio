@@ -299,7 +299,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getDatabase, ref, onValue, update, push, remove, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const firebaseConfig = {
@@ -316,17 +316,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
-window._auth = auth;
-window._db = db;
-window._ref = ref;
-window._onValue = onValue;
-window._update = update;
-window._push = push;
-window._remove = remove;
-window._set = set;
-window._signOut = signOut;
+setPersistence(auth, browserLocalPersistence).then(() => {
+  window._auth = auth;
+  window._db = db;
+  window._ref = ref;
+  window._onValue = onValue;
+  window._update = update;
+  window._push = push;
+  window._remove = remove;
+  window._set = set;
+  window._signOut = signOut;
 
-onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, (user) => {
   if (!user) {
     // Aguarda 2s antes de redirecionar para dar tempo ao Firebase
     setTimeout(() => {
@@ -374,7 +375,8 @@ onAuthStateChanged(auth, (user) => {
     carregarBloqueios();
     carregarConfig();
   }, { onlyOnce: true });
-});
+  });
+}); // setPersistence
 </script>
 
 <script>
