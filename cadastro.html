@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendaStudio — Criar minha conta</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde-xdark: #2d3d1e;
+  --verde-dark: #3a4f2a;
+  --verde: #5a7840;
+  --verde-mid: #7a9a58;
+  --verde-light: #b0c890;
+  --verde-pale: #d8e8c0;
+  --verde-cream: #f0f7e4;
+  --verde-blush: #f7fbf0;
+  --mel: #b87820;
+  --mel-light: #d4a050;
+  --mel-pale: #f5e8c8;
+  --white: #ffffff;
+  --ink: #1a2410;
+  --muted: #6a8050;
+  --red: #c0392b;
+  --red-light: #fdf0ef;
+  --green: #27ae60;
+  --green-light: #eafaf1;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color: var(--ink); min-height: 100vh; }
+
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 3rem;
+  background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--verde-pale);
+}
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--verde-xdark); text-decoration: none; }
+.nav-logo span { color: var(--mel); font-style: italic; }
+.nav-login { font-size: .85rem; color: var(--muted); text-decoration: none; }
+.nav-login:hover { color: var(--verde-dark); }
+
+.page-wrap { max-width: 560px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+.page-header { text-align: center; margin-bottom: 2.5rem; animation: fadeUp .5s ease both; }
+.page-tag { font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--mel); font-weight: 500; margin-bottom: .8rem; }
+.page-title { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 500; color: var(--verde-xdark); line-height: 1.1; }
+.page-title em { font-style: italic; color: var(--mel); }
+.page-sub { font-size: .88rem; color: var(--muted); margin-top: .6rem; font-weight: 300; }
+
+.trial-badge { display: inline-flex; align-items: center; gap: .5rem; background: var(--mel-pale); color: var(--mel); font-size: .78rem; font-weight: 500; padding: .5rem 1.2rem; border-radius: 2rem; margin-bottom: 2rem; }
+
+.form-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.6rem; padding: 2.5rem; animation: fadeUp .5s .1s ease both; }
+
+.section-label { font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--verde-cream); }
+
+.form-group { margin-bottom: 1.1rem; }
+.form-group label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: .4rem; font-weight: 500; }
+.form-group label span { color: var(--red); margin-left: 2px; }
+.form-group input, .form-group select { width: 100%; padding: .85rem 1rem; border: 1.5px solid var(--verde-pale); border-radius: .9rem; font-family: 'DM Sans', sans-serif; font-size: .9rem; color: var(--ink); outline: none; transition: border-color .2s, box-shadow .2s; background: var(--white); }
+.form-group input:focus, .form-group select:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(90,120,64,.08); }
+.form-group input.error { border-color: var(--red); }
+.form-group input.ok { border-color: var(--green); }
+.form-group .hint { font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+.form-group .field-err { font-size: .72rem; color: var(--red); margin-top: .3rem; display: none; }
+.form-group .field-err.show { display: block; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.input-icon { position: relative; }
+.input-icon input { padding-left: 2.5rem; }
+.input-icon .icon { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); font-size: .9rem; pointer-events: none; }
+
+.senha-wrap { position: relative; }
+.senha-wrap input { padding-right: 3rem; }
+.btn-toggle-senha { position: absolute; right: .9rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: .9rem; color: var(--muted); }
+
+.senha-strength { margin-top: .4rem; display: flex; gap: .3rem; }
+.strength-bar { height: 3px; border-radius: 2px; flex: 1; background: var(--verde-pale); transition: background .3s; }
+.strength-bar.fraca { background: var(--red); }
+.strength-bar.media { background: var(--mel); }
+.strength-bar.forte { background: var(--green); }
+.strength-label { font-size: .7rem; color: var(--muted); margin-top: .3rem; }
+
+.divider { border: none; border-top: 1px solid var(--verde-cream); margin: 1.5rem 0; }
+
+.termos-wrap { display: flex; gap: .8rem; align-items: flex-start; padding: 1rem; background: var(--verde-blush); border-radius: .8rem; border: 1.5px solid var(--verde-pale); margin-bottom: 1.5rem; cursor: pointer; transition: border-color .2s; }
+.termos-wrap:hover { border-color: var(--verde-light); }
+.termos-wrap input[type=checkbox] { accent-color: var(--verde-xdark); width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; cursor: pointer; }
+.termos-wrap label { font-size: .82rem; color: var(--ink); line-height: 1.5; cursor: pointer; }
+.termos-wrap label a { color: var(--verde-dark); text-decoration: underline; }
+
+.btn-cadastrar { width: 100%; padding: 1.1rem; background: var(--verde-xdark); color: var(--white); border: none; border-radius: 1rem; font-family: 'DM Sans', sans-serif; font-size: .95rem; font-weight: 500; cursor: pointer; transition: all .25s; display: flex; align-items: center; justify-content: center; gap: .5rem; }
+.btn-cadastrar:hover { background: var(--verde); transform: translateY(-1px); box-shadow: 0 10px 28px rgba(45,61,30,.2); }
+.btn-cadastrar:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.form-err-global { background: var(--red-light); border: 1px solid #f5c6c2; border-radius: .8rem; padding: .9rem 1rem; font-size: .82rem; color: var(--red); margin-bottom: 1rem; display: none; }
+.form-err-global.show { display: block; }
+
+.form-success { text-align: center; padding: 3rem 2rem; animation: fadeUp .5s ease both; }
+.form-success .success-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+.form-success h2 { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--verde-xdark); margin-bottom: .8rem; }
+.form-success p { font-size: .88rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; }
+.btn-painel { display: inline-block; background: var(--verde-xdark); color: var(--white); padding: .9rem 2rem; border-radius: 1rem; font-size: .9rem; font-weight: 500; text-decoration: none; transition: all .25s; }
+.btn-painel:hover { background: var(--verde); }
+
+.ja-tem-conta { text-align: center; margin-top: 1.5rem; font-size: .82rem; color: var(--muted); }
+.ja-tem-conta a { color: var(--verde-dark); text-decoration: none; font-weight: 500; }
+.ja-tem-conta a:hover { text-decoration: underline; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 560px) {
+  nav { padding: 1rem 1.2rem; }
+  .form-card { padding: 1.5rem; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="agendastudio.html" class="nav-logo">Agenda<span>Studio</span></a>
+  <a href="admin.html" class="nav-login">Já tenho conta →</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-tag">Cadastro gratuito</div>
+    <h1 class="page-title">Crie sua conta <em>e comece agora.</em></h1>
+    <p class="page-sub">30 dias grátis, sem precisar de cartão.</p>
+  </div>
+
+  <div style="text-align:center;">
+    <div class="trial-badge">🎁 30 dias grátis · Depois R$59,99/mês · Cancele quando quiser</div>
+  </div>
+
+  <div class="form-card" id="form-card">
+
+    <div id="form-err-global" class="form-err-global"></div>
+
+    <!-- DADOS DO ESTÚDIO -->
+    <div class="section-label">🏪 Dados do estúdio</div>
+
+    <div class="form-group">
+      <label>Nome do estúdio <span>*</span></label>
+      <div class="input-icon">
+        <span class="icon">🌿</span>
+        <input type="text" id="nome-studio" placeholder="Ex: Studio Bella, Espaço Mel...">
+      </div>
+      <div class="field-err" id="err-nome-studio">Informe o nome do estúdio</div>
+    </div>
+
+    <div class="form-group">
+      <label>Tipo de serviço <span>*</span></label>
+      <select id="tipo-servico">
+        <option value="">Selecione o tipo principal...</option>
+        <option value="depilacao">Depilação</option>
+        <option value="salao">Salão de beleza</option>
+        <option value="estetica">Estética</option>
+        <option value="sobrancelha">Sobrancelha & cílios</option>
+        <option value="unhas">Unhas & nail art</option>
+        <option value="massagem">Massagem & spa</option>
+        <option value="outros">Outros</option>
+      </select>
+      <div class="field-err" id="err-tipo-servico">Selecione o tipo de serviço</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cidade <span>*</span></label>
+        <div class="input-icon">
+          <span class="icon">📍</span>
+          <input type="text" id="cidade" placeholder="Ex: Brasília">
+        </div>
+        <div class="field-err" id="err-cidade">Informe a cidade</div>
+      </div>
+      <div class="form-group">
+        <label>Instagram</label>
+        <div class="input-icon">
+          <span class="icon">📸</span>
+          <input type="text" id="instagram" placeholder="@seuestudio">
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- DADOS DO RESPONSÁVEL -->
+    <div class="section-label">👤 Dados do responsável</div>
+
+    <div class="form-group">
+      <label>Seu nome completo <span>*</span></label>
+      <input type="text" id="nome-responsavel" placeholder="Como podemos te chamar?">
+      <div class="field-err" id="err-nome-responsavel">Informe seu nome</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>WhatsApp <span>*</span></label>
+        <div class="input-icon">
+          <span class="icon">💬</span>
+          <input type="tel" id="whatsapp" placeholder="(61) 99999-9999" maxlength="15">
+        </div>
+        <div class="field-err" id="err-whatsapp">Informe seu WhatsApp</div>
+      </div>
+      <div class="form-group">
+        <label>E-mail <span>*</span></label>
+        <input type="email" id="email" placeholder="seu@email.com">
+        <div class="field-err" id="err-email">Informe um e-mail válido</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Senha <span>*</span></label>
+      <div class="senha-wrap">
+        <input type="password" id="senha" placeholder="Mínimo 6 caracteres" oninput="verificarSenha()">
+        <button type="button" class="btn-toggle-senha" onclick="toggleSenha('senha', this)">👁️</button>
+      </div>
+      <div class="senha-strength">
+        <div class="strength-bar" id="bar1"></div>
+        <div class="strength-bar" id="bar2"></div>
+        <div class="strength-bar" id="bar3"></div>
+      </div>
+      <div class="strength-label" id="strength-label"></div>
+      <div class="field-err" id="err-senha">A senha precisa ter pelo menos 6 caracteres</div>
+    </div>
+
+    <div class="form-group">
+      <label>Confirmar senha <span>*</span></label>
+      <div class="senha-wrap">
+        <input type="password" id="confirmar-senha" placeholder="Repita a senha">
+        <button type="button" class="btn-toggle-senha" onclick="toggleSenha('confirmar-senha', this)">👁️</button>
+      </div>
+      <div class="field-err" id="err-confirmar-senha">As senhas não coincidem</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- TERMOS -->
+    <div class="termos-wrap">
+      <input type="checkbox" id="termos">
+      <label for="termos">Li e aceito os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a> do AgendaStudio.</label>
+    </div>
+    <div class="field-err" id="err-termos" style="margin-top:-.8rem;margin-bottom:1rem;">Você precisa aceitar os termos para continuar</div>
+
+    <button class="btn-cadastrar" id="btn-cadastrar" onclick="cadastrar()">
+      ✨ Criar minha conta grátis
+    </button>
+
+    <div class="ja-tem-conta">
+      Já tem uma conta? <a href="admin.html">Entrar no painel →</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDyE_BqLfVi7K3dZV6z08YMuKEaOsnGh_E",
+  authDomain: "dantielly-depilacao.firebaseapp.com",
+  databaseURL: "https://dantielly-depilacao-default-rtdb.firebaseio.com",
+  projectId: "dantielly-depilacao",
+  storageBucket: "dantielly-depilacao.firebasestorage.app",
+  messagingSenderId: "658252770067",
+  appId: "1:658252770067:web:af38d246162e91e3f948e6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+window._auth = auth;
+window._db = db;
+window._createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+window._ref = ref;
+window._set = set;
+</script>
+
+<script>
+// Máscara WhatsApp
+document.getElementById('whatsapp').addEventListener('input', function(e) {
+  let v = e.target.value.replace(/\D/g,'');
+  if (v.length > 11) v = v.slice(0,11);
+  if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+  else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  else if (v.length > 0) v = `(${v}`;
+  e.target.value = v;
+});
+
+// Toggle senha
+function toggleSenha(id, btn) {
+  const input = document.getElementById(id);
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁️' : '🙈';
+}
+
+// Força da senha
+function verificarSenha() {
+  const senha = document.getElementById('senha').value;
+  const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3')];
+  const label = document.getElementById('strength-label');
+
+  bars.forEach(b => { b.className = 'strength-bar'; });
+
+  if (!senha) { label.textContent = ''; return; }
+
+  let score = 0;
+  if (senha.length >= 6) score++;
+  if (senha.length >= 10) score++;
+  if (/[A-Z]/.test(senha) && /[0-9]/.test(senha)) score++;
+
+  if (score === 1) {
+    bars[0].classList.add('fraca');
+    label.textContent = 'Senha fraca';
+    label.style.color = '#c0392b';
+  } else if (score === 2) {
+    bars[0].classList.add('media'); bars[1].classList.add('media');
+    label.textContent = 'Senha média';
+    label.style.color = '#b87820';
+  } else {
+    bars.forEach(b => b.classList.add('forte'));
+    label.textContent = 'Senha forte ✓';
+    label.style.color = '#27ae60';
+  }
+}
+
+// Validação
+function validar() {
+  let ok = true;
+
+  const campos = [
+    { id: 'nome-studio', err: 'err-nome-studio', check: v => v.trim().length > 0 },
+    { id: 'tipo-servico', err: 'err-tipo-servico', check: v => v !== '' },
+    { id: 'cidade', err: 'err-cidade', check: v => v.trim().length > 0 },
+    { id: 'nome-responsavel', err: 'err-nome-responsavel', check: v => v.trim().length > 0 },
+    { id: 'whatsapp', err: 'err-whatsapp', check: v => v.replace(/\D/g,'').length >= 10 },
+    { id: 'email', err: 'err-email', check: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) },
+    { id: 'senha', err: 'err-senha', check: v => v.length >= 6 },
+  ];
+
+  campos.forEach(({ id, err, check }) => {
+    const val = document.getElementById(id).value;
+    const errEl = document.getElementById(err);
+    if (!check(val)) { errEl.classList.add('show'); ok = false; }
+    else errEl.classList.remove('show');
+  });
+
+  const senha = document.getElementById('senha').value;
+  const confirmar = document.getElementById('confirmar-senha').value;
+  const errConf = document.getElementById('err-confirmar-senha');
+  if (senha !== confirmar) { errConf.classList.add('show'); ok = false; }
+  else errConf.classList.remove('show');
+
+  const termos = document.getElementById('termos').checked;
+  const errTermos = document.getElementById('err-termos');
+  if (!termos) { errTermos.classList.add('show'); ok = false; }
+  else errTermos.classList.remove('show');
+
+  return ok;
+}
+
+// Cadastro
+async function cadastrar() {
+  if (!validar()) return;
+
+  const btn = document.getElementById('btn-cadastrar');
+  const errGlobal = document.getElementById('form-err-global');
+  errGlobal.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = '⏳ Criando sua conta...';
+
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
+  const nomeStudio = document.getElementById('nome-studio').value.trim();
+  const tipoServico = document.getElementById('tipo-servico').value;
+  const cidade = document.getElementById('cidade').value.trim();
+  const instagram = document.getElementById('instagram').value.trim();
+  const nomeResponsavel = document.getElementById('nome-responsavel').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+
+  try {
+    const cred = await window._createUserWithEmailAndPassword(window._auth, email, senha);
+    const uid = cred.user.uid;
+
+    await window._set(window._ref(window._db, `studios/${uid}`), {
+      nomeStudio,
+      tipoServico,
+      cidade,
+      instagram: instagram.replace('@',''),
+      nomeResponsavel,
+      whatsapp,
+      email,
+      plano: 'trial',
+      trialInicio: new Date().toISOString(),
+      criadoEm: new Date().toISOString(),
+      ativo: true
+    });
+
+    // Sucesso — redireciona automaticamente
+    btn.textContent = '✅ Conta criada! Entrando no painel...';
+    setTimeout(() => { window.location.href = 'painel.html'; }, 1500);
+    document.getElementById('form-card').innerHTML = `
+      <div class="form-success">
+        <span class="success-icon">🎉</span>
+        <h2>Bem-vinda, ${nomeStudio}!</h2>
+        <p>Sua conta foi criada com sucesso.<br>Redirecionando para o seu painel em instantes...</p>
+        <a href="painel.html" class="btn-painel">Acessar meu painel →</a>
+      </div>
+    `;
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Criar minha conta grátis';
+    errGlobal.classList.add('show');
+    if (e.code === 'auth/email-already-in-use') {
+      errGlobal.textContent = 'Este e-mail já está cadastrado. Tente fazer login.';
+    } else if (e.code === 'auth/invalid-email') {
+      errGlobal.textContent = 'E-mail inválido. Verifique e tente novamente.';
+    } else {
+      errGlobal.textContent = 'Erro ao criar conta. Tente novamente em instantes.';
+    }
+  }
+}
+
+window.cadastrar = cadastrar;
+window.toggleSenha = toggleSenha;
+window.verificarSenha = verificarSenha;
+</script>
+</body>
+</html>
