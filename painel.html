@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendaStudio — Meu Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde-xdark: #2d3d1e; --verde-dark: #3a4f2a; --verde: #5a7840;
+  --verde-mid: #7a9a58; --verde-light: #b0c890; --verde-pale: #d8e8c0;
+  --verde-cream: #f0f7e4; --verde-blush: #f7fbf0;
+  --mel: #b87820; --mel-light: #d4a050; --mel-pale: #f5e8c8;
+  --white: #ffffff; --ink: #1a2410; --muted: #6a8050;
+  --red: #c0392b; --red-light: #fdf0ef; --green: #27ae60; --green-light: #eafaf1;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color: var(--ink); min-height: 100vh; }
+
+/* LOADING */
+.loading-screen { position: fixed; inset: 0; background: var(--verde-blush); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; }
+.loading-logo { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600; color: var(--verde-xdark); margin-bottom: 1.5rem; }
+.loading-logo span { color: var(--mel); font-style: italic; }
+.loading-spinner { width: 36px; height: 36px; border: 3px solid var(--verde-pale); border-top-color: var(--verde); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* NAV */
+.nav { background: var(--verde-xdark); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--white); }
+.nav-logo span { color: var(--mel-light); font-style: italic; }
+.nav-right { display: flex; align-items: center; gap: 1rem; }
+.nav-studio { font-size: .82rem; color: rgba(255,255,255,.6); }
+.nav-studio strong { color: var(--white); font-weight: 500; }
+.btn-logout { background: rgba(255,255,255,.1); color: var(--white); border: 1px solid rgba(255,255,255,.2); border-radius: .5rem; padding: .35rem .9rem; font-size: .78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background .2s; }
+.btn-logout:hover { background: rgba(255,255,255,.2); }
+
+/* TRIAL BANNER */
+.trial-banner { background: var(--mel-pale); border-bottom: 1px solid #e8d4a0; padding: .7rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.trial-banner p { font-size: .82rem; color: #7a5010; }
+.trial-banner strong { font-weight: 600; }
+.btn-assinar { background: var(--mel); color: var(--white); border: none; border-radius: .5rem; padding: .4rem 1rem; font-size: .78rem; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.btn-assinar:hover { background: var(--mel-light); }
+
+/* BODY */
+.painel-body { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* BOAS VINDAS */
+.bv-section { margin-bottom: 2rem; }
+.bv-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; color: var(--verde-xdark); }
+.bv-sub { font-size: .85rem; color: var(--muted); margin-top: .2rem; font-weight: 300; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; padding: 1.2rem 1.4rem; }
+.stat-card.destaque { background: var(--verde-cream); border-color: var(--verde-light); }
+.stat-card.mel { border-color: var(--mel-pale); }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 500; color: var(--verde-xdark); line-height: 1; }
+.stat-card.mel .stat-num { color: var(--mel); }
+.stat-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: .3rem; }
+
+/* TABS */
+.tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab { padding: .55rem 1.3rem; border: 1.5px solid var(--verde-pale); border-radius: 2rem; font-size: .82rem; font-weight: 500; cursor: pointer; color: var(--muted); background: var(--white); transition: all .2s; font-family: 'DM Sans', sans-serif; }
+.tab.active { background: var(--verde-xdark); color: var(--white); border-color: var(--verde-xdark); }
+
+/* AGENDA */
+.filter-bar { display: flex; gap: .8rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
+.filter-bar input[type=date], .filter-bar select { padding: .55rem .9rem; border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .82rem; outline: none; background: var(--white); color: var(--ink); }
+.btn-refresh { padding: .55rem 1.2rem; background: var(--verde-cream); border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-size: .8rem; cursor: pointer; color: var(--verde-dark); font-family: 'DM Sans', sans-serif; }
+.btn-refresh:hover { background: var(--verde-pale); }
+.section-day-label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--verde-dark); font-weight: 600; margin-bottom: .8rem; margin-top: 1.5rem; display: flex; align-items: center; gap: .5rem; }
+.section-day-label::after { content: ''; flex: 1; height: 1px; background: var(--verde-pale); }
+.ag-list { display: flex; flex-direction: column; gap: .7rem; }
+.ag-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.1rem; padding: 1rem 1.2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.ag-card.confirmado { border-left: 4px solid var(--green); }
+.ag-card.pendente { border-left: 4px solid var(--mel); }
+.ag-card.cancelado { border-left: 4px solid var(--red); opacity: .6; }
+.ag-card.hoje { background: var(--verde-cream); }
+.ag-time { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--verde-xdark); min-width: 55px; }
+.ag-info { flex: 1; }
+.ag-nome { font-size: .9rem; font-weight: 500; }
+.ag-svc { font-size: .75rem; color: var(--muted); margin-top: .1rem; }
+.ag-wa { font-size: .73rem; color: var(--verde-dark); margin-top: .2rem; }
+.ag-status { font-size: .7rem; padding: .22rem .7rem; border-radius: 1rem; font-weight: 500; }
+.ag-status.pendente { background: var(--mel-pale); color: var(--mel); }
+.ag-status.confirmado { background: var(--green-light); color: var(--green); }
+.ag-status.cancelado { background: var(--red-light); color: var(--red); }
+.ag-actions { display: flex; gap: .4rem; }
+.btn-sm { padding: .3rem .7rem; border-radius: .5rem; font-size: .73rem; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+.btn-conf { background: var(--green-light); color: var(--green); }
+.btn-canc { background: var(--red-light); color: var(--red); }
+.btn-wa { background: #e8f8f0; color: #25d366; }
+.empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: .88rem; }
+
+/* BLOQUEIOS */
+.bloquear-form { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; padding: 1.4rem; margin-bottom: 1.5rem; }
+.bloquear-form h3 { font-size: .85rem; font-weight: 600; color: var(--verde-dark); margin-bottom: 1rem; }
+.form-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: flex-end; }
+.form-group-b { display: flex; flex-direction: column; gap: .3rem; }
+.form-group-b label { font-size: .72rem; color: var(--muted); font-weight: 500; }
+.form-group-b input { padding: .55rem .8rem; border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .85rem; outline: none; }
+.btn-bloquear { padding: .6rem 1.4rem; background: var(--ink); color: var(--white); border: none; border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .82rem; cursor: pointer; }
+.bloqueios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .8rem; }
+.bloquear-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: .9rem; padding: .9rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+.bloquear-card span { font-size: .8rem; color: var(--ink); }
+.bloquear-card small { font-size: .72rem; color: var(--muted); display: block; }
+.btn-del { background: var(--red-light); color: var(--red); border: none; border-radius: .5rem; padding: .25rem .6rem; font-size: .72rem; cursor: pointer; }
+
+/* CONFIG */
+.config-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; padding: 1.4rem; margin-bottom: 1.2rem; }
+.config-card h3 { font-size: .85rem; font-weight: 600; color: var(--verde-dark); margin-bottom: 1rem; }
+.config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem; }
+.config-slot { display: flex; align-items: center; gap: .5rem; font-size: .82rem; }
+.config-slot input[type=checkbox] { accent-color: var(--verde-xdark); width: 16px; height: 16px; }
+.btn-salvar { padding: .7rem 2rem; background: var(--verde-xdark); color: var(--white); border: none; border-radius: .8rem; font-family: 'DM Sans', sans-serif; font-size: .88rem; font-weight: 500; cursor: pointer; margin-top: 1rem; }
+.btn-salvar:hover { opacity: .9; }
+
+/* PERFIL */
+.perfil-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; padding: 1.6rem; margin-bottom: 1.2rem; }
+.perfil-card h3 { font-size: .85rem; font-weight: 600; color: var(--verde-dark); margin-bottom: 1.2rem; }
+.perfil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.perfil-field { display: flex; flex-direction: column; gap: .3rem; }
+.perfil-field label { font-size: .72rem; color: var(--muted); font-weight: 500; }
+.perfil-field input, .perfil-field select { padding: .7rem .9rem; border: 1.5px solid var(--verde-pale); border-radius: .8rem; font-family: 'DM Sans', sans-serif; font-size: .85rem; outline: none; transition: border-color .2s; }
+.perfil-field input:focus, .perfil-field select:focus { border-color: var(--verde); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--verde-xdark); color: var(--white); padding: .75rem 1.8rem; border-radius: 2rem; font-size: .83rem; display: none; z-index: 500; box-shadow: 0 6px 24px rgba(45,61,30,.3); }
+.toast.show { display: block; }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .nav { padding: 0 1rem; }
+  .painel-body { padding: 1rem; }
+  .perfil-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loading">
+  <div class="loading-logo">Agenda<span>Studio</span></div>
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel-wrap" style="display:none;">
+
+  <nav class="nav">
+    <div class="nav-logo">Agenda<span>Studio</span></div>
+    <div class="nav-right">
+      <div class="nav-studio">Olá, <strong id="nav-nome">...</strong></div>
+      <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="trial-banner" id="trial-banner" style="display:none;">
+    <p>🎁 Você está no período de teste grátis. <strong id="trial-dias"></strong> restantes.</p>
+    <button class="btn-assinar">Assinar agora — R$59,99/mês</button>
+  </div>
+
+  <div class="painel-body">
+
+    <div class="bv-section">
+      <div class="bv-title">Bem-vinda, <span id="bv-nome">...</span> 🌿</div>
+      <div class="bv-sub" id="bv-sub">Carregando seus dados...</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card destaque">
+        <div class="stat-num" id="stat-hoje">0</div>
+        <div class="stat-label">Hoje</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-semana">0</div>
+        <div class="stat-label">Esta semana</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-mes">0</div>
+        <div class="stat-label">Este mês</div>
+      </div>
+      <div class="stat-card mel">
+        <div class="stat-num" id="stat-pendentes">0</div>
+        <div class="stat-label">Pendentes</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="mudarAba('agenda', this)">📅 Agenda</button>
+      <button class="tab" onclick="mudarAba('bloqueios', this)">🚫 Bloqueios</button>
+      <button class="tab" onclick="mudarAba('config', this)">⚙️ Horários</button>
+      <button class="tab" onclick="mudarAba('perfil', this)">🏪 Meu Estúdio</button>
+    </div>
+
+    <!-- ABA AGENDA -->
+    <div id="aba-agenda">
+      <div class="filter-bar">
+        <input type="date" id="filtro-data">
+        <select id="filtro-status">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+        <button class="btn-refresh" onclick="carregarAgendamentos()">↻ Atualizar</button>
+      </div>
+      <div class="section-day-label">Hoje</div>
+      <div class="ag-list" id="lista-hoje"><div class="empty-state">Carregando...</div></div>
+      <div class="section-day-label" style="margin-top:1.5rem;">Próximos</div>
+      <div class="ag-list" id="lista-proximos"><div class="empty-state">Carregando...</div></div>
+    </div>
+
+    <!-- ABA BLOQUEIOS -->
+    <div id="aba-bloqueios" style="display:none;">
+      <div class="bloquear-form">
+        <h3>Bloquear horário</h3>
+        <div class="form-row">
+          <div class="form-group-b">
+            <label>Data</label>
+            <input type="date" id="bloquear-data">
+          </div>
+          <div class="form-group-b">
+            <label>Horário</label>
+            <input type="time" id="bloquear-hora">
+          </div>
+          <div class="form-group-b">
+            <label>Motivo (opcional)</label>
+            <input type="text" id="bloquear-motivo" placeholder="Ex: Almoço, folga...">
+          </div>
+          <button class="btn-bloquear" onclick="adicionarBloqueio()">Bloquear</button>
+        </div>
+      </div>
+      <div class="bloqueios-grid" id="lista-bloqueios">
+        <div class="empty-state">Nenhum bloqueio.</div>
+      </div>
+    </div>
+
+    <!-- ABA CONFIG -->
+    <div id="aba-config" style="display:none;">
+      <div class="config-card">
+        <h3>Horários disponíveis para agendamento</h3>
+        <div class="config-grid" id="config-horarios"></div>
+        <button class="btn-salvar" onclick="salvarConfig()">Salvar horários</button>
+      </div>
+      <div class="config-card">
+        <h3>Dias de atendimento</h3>
+        <div class="config-grid" id="config-dias"></div>
+        <button class="btn-salvar" onclick="salvarConfig()">Salvar dias</button>
+      </div>
+    </div>
+
+    <!-- ABA PERFIL -->
+    <div id="aba-perfil" style="display:none;">
+      <div class="perfil-card">
+        <h3>Dados do estúdio</h3>
+        <div class="perfil-grid">
+          <div class="perfil-field">
+            <label>Nome do estúdio</label>
+            <input type="text" id="p-nome-studio">
+          </div>
+          <div class="perfil-field">
+            <label>Tipo de serviço</label>
+            <select id="p-tipo-servico">
+              <option value="depilacao">Depilação</option>
+              <option value="salao">Salão de beleza</option>
+              <option value="estetica">Estética</option>
+              <option value="sobrancelha">Sobrancelha & cílios</option>
+              <option value="unhas">Unhas & nail art</option>
+              <option value="massagem">Massagem & spa</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="perfil-field">
+            <label>Cidade</label>
+            <input type="text" id="p-cidade">
+          </div>
+          <div class="perfil-field">
+            <label>Instagram</label>
+            <input type="text" id="p-instagram" placeholder="@seuestudio">
+          </div>
+          <div class="perfil-field">
+            <label>WhatsApp</label>
+            <input type="tel" id="p-whatsapp">
+          </div>
+          <div class="perfil-field">
+            <label>Nome do responsável</label>
+            <input type="text" id="p-responsavel">
+          </div>
+        </div>
+        <button class="btn-salvar" onclick="salvarPerfil()">Salvar dados</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, onValue, update, push, remove, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDyE_BqLfVi7K3dZV6z08YMuKEaOsnGh_E",
+  authDomain: "dantielly-depilacao.firebaseapp.com",
+  databaseURL: "https://dantielly-depilacao-default-rtdb.firebaseio.com",
+  projectId: "dantielly-depilacao",
+  storageBucket: "dantielly-depilacao.firebasestorage.app",
+  messagingSenderId: "658252770067",
+  appId: "1:658252770067:web:af38d246162e91e3f948e6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+window._auth = auth;
+window._db = db;
+window._ref = ref;
+window._onValue = onValue;
+window._update = update;
+window._push = push;
+window._remove = remove;
+window._set = set;
+window._signOut = signOut;
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = 'cadastro.html';
+    return;
+  }
+
+  window._uid = user.uid;
+
+  // Carrega dados do estúdio
+  onValue(ref(db, `studios/${user.uid}`), (snap) => {
+    const dados = snap.val() || {};
+    window._dadosStudio = dados;
+
+    document.getElementById('nav-nome').textContent = dados.nomeStudio || 'Estúdio';
+    document.getElementById('bv-nome').textContent = dados.nomeStudio || 'Estúdio';
+    document.getElementById('bv-sub').textContent = `${dados.tipoServico || ''} · ${dados.cidade || ''}`;
+
+    // Trial banner
+    if (dados.plano === 'trial' && dados.trialInicio) {
+      const inicio = new Date(dados.trialInicio);
+      const agora = new Date();
+      const dias = 30 - Math.floor((agora - inicio) / (1000*60*60*24));
+      if (dias > 0) {
+        document.getElementById('trial-banner').style.display = 'flex';
+        document.getElementById('trial-dias').textContent = `${dias} dia${dias > 1 ? 's' : ''}`;
+      }
+    }
+
+    // Perfil
+    document.getElementById('p-nome-studio').value = dados.nomeStudio || '';
+    document.getElementById('p-tipo-servico').value = dados.tipoServico || '';
+    document.getElementById('p-cidade').value = dados.cidade || '';
+    document.getElementById('p-instagram').value = dados.instagram || '';
+    document.getElementById('p-whatsapp').value = dados.whatsapp || '';
+    document.getElementById('p-responsavel').value = dados.nomeResponsavel || '';
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('painel-wrap').style.display = 'block';
+
+    carregarAgendamentos();
+    carregarBloqueios();
+    carregarConfig();
+  }, { onlyOnce: true });
+});
+</script>
+
+<script>
+const HORARIOS_PADRAO = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+const DIAS_SEMANA = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+
+function uid() { return window._uid; }
+
+// ABAS
+function mudarAba(aba, btn) {
+  ['agenda','bloqueios','config','perfil'].forEach(a => {
+    document.getElementById('aba-'+a).style.display = a === aba ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// TOAST
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// LOGOUT
+async function fazerLogout() {
+  await window._signOut(window._auth);
+  window.location.href = 'agendastudio.html';
+}
+
+// AGENDAMENTOS
+function carregarAgendamentos() {
+  const hoje = new Date().toISOString().split('T')[0];
+  const filtroData = document.getElementById('filtro-data').value || hoje;
+  const filtroStatus = document.getElementById('filtro-status').value;
+
+  window._onValue(window._ref(window._db, `studios/${uid()}/agendamentos`), (snap) => {
+    const dados = snap.val() || {};
+    const todos = Object.entries(dados).map(([id, v]) => ({id, ...v}));
+
+    const deHoje = todos.filter(a => a.data === hoje && a.status !== 'cancelado');
+    const proximos = todos.filter(a => {
+      if (a.data < hoje) return false;
+      if (filtroData && a.data !== filtroData) return false;
+      if (filtroStatus && a.status !== filtroStatus) return false;
+      return true;
+    }).sort((a,b) => (a.data+a.hora).localeCompare(b.data+b.hora));
+
+    const pendentes = todos.filter(a => a.status === 'pendente').length;
+    const semana = todos.filter(a => {
+      const d = new Date(a.data+'T00:00:00');
+      const agora = new Date();
+      const diff = (d - agora) / (1000*60*60*24);
+      return diff >= 0 && diff < 7;
+    }).length;
+    const mes = todos.filter(a => a.data && a.data.startsWith(hoje.slice(0,7))).length;
+
+    document.getElementById('stat-hoje').textContent = deHoje.length;
+    document.getElementById('stat-semana').textContent = semana;
+    document.getElementById('stat-mes').textContent = mes;
+    document.getElementById('stat-pendentes').textContent = pendentes;
+
+    renderLista('lista-hoje', deHoje, true);
+    renderLista('lista-proximos', proximos, false);
+  }, { onlyOnce: true });
+}
+
+function renderLista(elId, lista, isHoje) {
+  const el = document.getElementById(elId);
+  if (!lista.length) { el.innerHTML = '<div class="empty-state">Nenhum agendamento.</div>'; return; }
+  el.innerHTML = lista.map(a => `
+    <div class="ag-card ${a.status||'pendente'} ${isHoje?'hoje':''}">
+      <div class="ag-time">${a.hora||'--:--'}</div>
+      <div class="ag-info">
+        <div class="ag-nome">${a.nome||'Cliente'}</div>
+        <div class="ag-svc">${a.servico||''} ${!isHoje && a.data ? '· '+formatarData(a.data) : ''}</div>
+        ${a.whatsapp ? `<div class="ag-wa">📱 ${a.whatsapp}</div>` : ''}
+      </div>
+      <span class="ag-status ${a.status||'pendente'}">${traduzirStatus(a.status)}</span>
+      <div class="ag-actions">
+        ${a.status !== 'confirmado' ? `<button class="btn-sm btn-conf" onclick="atualizarStatus('${a.id}','confirmado')">✓</button>` : ''}
+        ${a.status !== 'cancelado' ? `<button class="btn-sm btn-canc" onclick="atualizarStatus('${a.id}','cancelado')">✗</button>` : ''}
+        ${a.whatsapp ? `<button class="btn-sm btn-wa" onclick="abrirWA('${a.whatsapp}','${a.nome||''}')">💬</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function traduzirStatus(s) {
+  return {pendente:'Pendente',confirmado:'Confirmado',cancelado:'Cancelado'}[s]||'Pendente';
+}
+function formatarData(d) {
+  if (!d) return '';
+  const [y,m,dia] = d.split('-');
+  return `${dia}/${m}`;
+}
+async function atualizarStatus(id, status) {
+  await window._update(window._ref(window._db, `studios/${uid()}/agendamentos/${id}`), {status});
+  showToast(status === 'confirmado' ? '✅ Confirmado!' : '❌ Cancelado');
+  carregarAgendamentos();
+}
+function abrirWA(tel, nome) {
+  const num = tel.replace(/\D/g,'');
+  window.open(`https://wa.me/55${num}?text=${encodeURIComponent(`Olá ${nome}!`)}`, '_blank');
+}
+
+// BLOQUEIOS
+function carregarBloqueios() {
+  window._onValue(window._ref(window._db, `studios/${uid()}/bloqueios`), (snap) => {
+    const dados = snap.val() || {};
+    const lista = Object.entries(dados).map(([id,v]) => ({id,...v}));
+    const el = document.getElementById('lista-bloqueios');
+    if (!lista.length) { el.innerHTML = '<div class="empty-state">Nenhum bloqueio.</div>'; return; }
+    el.innerHTML = lista.sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora)).map(b => `
+      <div class="bloquear-card">
+        <div>
+          <span>${formatarData(b.data)} às ${b.hora}</span>
+          <small>${b.motivo||'Sem motivo'}</small>
+        </div>
+        <button class="btn-del" onclick="removerBloqueio('${b.id}')">✕</button>
+      </div>
+    `).join('');
+  }, { onlyOnce: true });
+}
+
+async function adicionarBloqueio() {
+  const data = document.getElementById('bloquear-data').value;
+  const hora = document.getElementById('bloquear-hora').value;
+  const motivo = document.getElementById('bloquear-motivo').value;
+  if (!data || !hora) { showToast('Informe data e hora'); return; }
+  await window._push(window._ref(window._db, `studios/${uid()}/bloqueios`), {data, hora, motivo});
+  showToast('Horário bloqueado!');
+  carregarBloqueios();
+}
+
+async function removerBloqueio(id) {
+  await window._remove(window._ref(window._db, `studios/${uid()}/bloqueios/${id}`));
+  showToast('Bloqueio removido');
+  carregarBloqueios();
+}
+
+// CONFIG
+function carregarConfig() {
+  window._onValue(window._ref(window._db, `studios/${uid()}/config`), (snap) => {
+    const cfg = snap.val() || {};
+    const horarios = cfg.horarios || HORARIOS_PADRAO;
+    const dias = cfg.dias || [0,1,2,3,4,5];
+
+    document.getElementById('config-horarios').innerHTML = HORARIOS_PADRAO.map(h => `
+      <label class="config-slot">
+        <input type="checkbox" value="${h}" ${horarios.includes(h)?'checked':''}> ${h}
+      </label>
+    `).join('');
+
+    document.getElementById('config-dias').innerHTML = DIAS_SEMANA.map((d,i) => `
+      <label class="config-slot">
+        <input type="checkbox" value="${i}" ${dias.includes(i)?'checked':''}> ${d}
+      </label>
+    `).join('');
+  }, { onlyOnce: true });
+}
+
+async function salvarConfig() {
+  const horarios = [...document.querySelectorAll('#config-horarios input:checked')].map(i=>i.value);
+  const dias = [...document.querySelectorAll('#config-dias input:checked')].map(i=>parseInt(i.value));
+  await window._set(window._ref(window._db, `studios/${uid()}/config`), {horarios, dias});
+  showToast('✅ Configurações salvas!');
+}
+
+// PERFIL
+async function salvarPerfil() {
+  const dados = {
+    nomeStudio: document.getElementById('p-nome-studio').value.trim(),
+    tipoServico: document.getElementById('p-tipo-servico').value,
+    cidade: document.getElementById('p-cidade').value.trim(),
+    instagram: document.getElementById('p-instagram').value.replace('@','').trim(),
+    whatsapp: document.getElementById('p-whatsapp').value.trim(),
+    nomeResponsavel: document.getElementById('p-responsavel').value.trim(),
+  };
+  await window._update(window._ref(window._db, `studios/${uid()}`), dados);
+  document.getElementById('nav-nome').textContent = dados.nomeStudio;
+  document.getElementById('bv-nome').textContent = dados.nomeStudio;
+  showToast('✅ Dados salvos!');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const hoje = new Date().toISOString().split('T')[0];
+  document.getElementById('filtro-data').value = hoje;
+  document.getElementById('filtro-data').addEventListener('change', carregarAgendamentos);
+  document.getElementById('filtro-status').addEventListener('change', carregarAgendamentos);
+  document.getElementById('bloquear-data').value = hoje;
+});
+
+window.mudarAba = mudarAba;
+window.fazerLogout = fazerLogout;
+window.carregarAgendamentos = carregarAgendamentos;
+window.atualizarStatus = atualizarStatus;
+window.abrirWA = abrirWA;
+window.adicionarBloqueio = adicionarBloqueio;
+window.removerBloqueio = removerBloqueio;
+window.salvarConfig = salvarConfig;
+window.salvarPerfil = salvarPerfil;
+</script>
+</body>
+</html>
