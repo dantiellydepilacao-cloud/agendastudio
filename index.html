@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendaStudio — Sua agenda cheia, no piloto automático</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde-xdark: #2d3d1e;
+  --verde-dark: #3a4f2a;
+  --verde: #5a7840;
+  --verde-mid: #7a9a58;
+  --verde-light: #b0c890;
+  --verde-pale: #d8e8c0;
+  --verde-cream: #f0f7e4;
+  --verde-blush: #f7fbf0;
+  --mel: #b87820;
+  --mel-light: #d4a050;
+  --mel-pale: #f5e8c8;
+  --white: #ffffff;
+  --ink: #1a2410;
+  --muted: #6a8050;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--ink); overflow-x: hidden; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; width: 100%; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 4rem;
+  background: rgba(255,255,255,.95); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--verde-pale);
+  transition: box-shadow .3s;
+}
+nav.scrolled { box-shadow: 0 4px 24px rgba(45,61,30,.08); }
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--verde-xdark); letter-spacing: -.01em; }
+.nav-logo span { color: var(--mel); font-style: italic; }
+.nav-cta { background: var(--verde-xdark); color: var(--white); padding: .65rem 1.8rem; border-radius: 2rem; font-size: .85rem; font-weight: 500; text-decoration: none; transition: all .2s; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.nav-cta:hover { background: var(--verde); transform: translateY(-1px); }
+
+/* HERO */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  padding: 8rem 4rem 5rem;
+  background: var(--verde-blush);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: -20%; right: -10%;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, var(--verde-pale) 0%, transparent 65%);
+  border-radius: 50%; pointer-events: none;
+}
+.hero::after {
+  content: '';
+  position: absolute; bottom: -15%; left: -5%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, var(--mel-pale) 0%, transparent 65%);
+  border-radius: 50%; pointer-events: none; opacity: .5;
+}
+.hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; position: relative; z-index: 1; }
+.hero-tag { display: inline-flex; align-items: center; gap: .5rem; background: var(--verde-pale); color: var(--verde-dark); font-size: .72rem; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; padding: .4rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem; animation: fadeUp .5s ease both; }
+.hero-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--mel); }
+.hero-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.8rem, 5vw, 4.5rem); font-weight: 500; line-height: 1.05; color: var(--verde-xdark); margin-bottom: 1.5rem; animation: fadeUp .6s .1s ease both; }
+.hero-title em { font-style: italic; color: var(--mel); display: block; }
+.hero-body { font-size: 1.05rem; line-height: 1.75; color: var(--muted); margin-bottom: 2.5rem; max-width: 420px; font-weight: 300; animation: fadeUp .6s .2s ease both; }
+.hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeUp .6s .3s ease both; }
+.btn-primary { background: var(--verde-xdark); color: var(--white); padding: 1rem 2.4rem; border-radius: 2rem; font-size: .92rem; font-weight: 500; text-decoration: none; transition: all .25s; display: inline-flex; align-items: center; gap: .5rem; }
+.btn-primary:hover { background: var(--verde); transform: translateY(-2px); box-shadow: 0 12px 30px rgba(45,61,30,.25); }
+.btn-outline { background: transparent; color: var(--verde-dark); padding: 1rem 2.4rem; border-radius: 2rem; border: 1.5px solid var(--verde-light); font-size: .92rem; font-weight: 500; text-decoration: none; transition: all .25s; display: inline-flex; align-items: center; gap: .5rem; }
+.btn-outline:hover { border-color: var(--verde); background: var(--verde-cream); }
+.hero-price { display: flex; align-items: baseline; gap: .4rem; margin-top: 1.8rem; animation: fadeUp .6s .4s ease both; }
+.hero-price .valor { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 600; color: var(--verde-xdark); }
+.hero-price .periodo { font-size: .82rem; color: var(--muted); }
+.hero-price .free { font-size: .78rem; background: var(--mel-pale); color: var(--mel); padding: .25rem .7rem; border-radius: 1rem; font-weight: 500; margin-left: .3rem; }
+
+/* HERO VISUAL */
+.hero-visual { position: relative; animation: fadeRight .8s .2s ease both; }
+.mockup-phone {
+  background: var(--white);
+  border-radius: 2rem;
+  padding: 1.5rem;
+  box-shadow: 0 40px 80px rgba(45,61,30,.18), 0 0 0 1px var(--verde-pale);
+  position: relative;
+}
+.mockup-header { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.4rem; padding-bottom: 1rem; border-bottom: 1px solid var(--verde-cream); }
+.mockup-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--verde-mid), var(--verde-xdark)); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.mockup-name { font-size: .88rem; font-weight: 500; color: var(--ink); }
+.mockup-sub { font-size: .72rem; color: var(--muted); }
+.mockup-stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .6rem; margin-bottom: 1.2rem; }
+.mockup-stat { background: var(--verde-blush); border-radius: .8rem; padding: .8rem; text-align: center; }
+.mockup-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; color: var(--verde-xdark); }
+.mockup-stat-label { font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.mockup-ag { display: flex; flex-direction: column; gap: .5rem; }
+.mockup-ag-item { display: flex; align-items: center; gap: .8rem; padding: .7rem .9rem; border-radius: .8rem; border: 1px solid var(--verde-pale); }
+.mockup-ag-item.confirmado { border-left: 3px solid #27ae60; }
+.mockup-ag-item.pendente { border-left: 3px solid var(--mel); }
+.mockup-ag-time { font-size: .78rem; font-weight: 500; color: var(--verde-dark); min-width: 40px; }
+.mockup-ag-info { flex: 1; }
+.mockup-ag-nome { font-size: .78rem; font-weight: 500; color: var(--ink); }
+.mockup-ag-svc { font-size: .65rem; color: var(--muted); }
+.mockup-badge { font-size: .6rem; padding: .18rem .5rem; border-radius: .5rem; font-weight: 500; }
+.mockup-badge.ok { background: #eafaf1; color: #27ae60; }
+.mockup-badge.pend { background: var(--mel-pale); color: var(--mel); }
+.float-card {
+  position: absolute; bottom: -1.5rem; left: -2rem;
+  background: var(--white); border-radius: 1rem; padding: .9rem 1.2rem;
+  box-shadow: 0 12px 36px rgba(45,61,30,.15); border: 1px solid var(--verde-pale);
+  min-width: 160px; animation: float 3s ease-in-out infinite;
+}
+.float-card p { font-size: .65rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-bottom: .2rem; }
+.float-card strong { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--verde-xdark); }
+.float-card-2 {
+  position: absolute; top: -1rem; right: -1.5rem;
+  background: var(--verde-xdark); border-radius: 1rem; padding: .8rem 1rem;
+  box-shadow: 0 8px 24px rgba(45,61,30,.3);
+  animation: float 3s 1.5s ease-in-out infinite;
+}
+.float-card-2 p { font-size: .65rem; color: rgba(255,255,255,.6); margin-bottom: .1rem; }
+.float-card-2 strong { font-size: .88rem; color: var(--white); display: block; }
+
+/* BENEFICIOS */
+.beneficios { padding: 7rem 4rem; background: var(--white); }
+.section-center { text-align: center; max-width: 560px; margin: 0 auto 4rem; }
+.section-tag { font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--mel); font-weight: 500; margin-bottom: .8rem; }
+.section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 500; color: var(--verde-xdark); line-height: 1.15; }
+.section-title em { font-style: italic; color: var(--mel); }
+.ben-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.ben-card { background: var(--verde-blush); border: 1px solid var(--verde-pale); border-radius: 1.4rem; padding: 2rem; transition: transform .3s, box-shadow .3s; }
+.ben-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(45,61,30,.1); }
+.ben-icon { font-size: 2rem; margin-bottom: 1.2rem; display: block; }
+.ben-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 500; color: var(--verde-xdark); margin-bottom: .6rem; }
+.ben-body { font-size: .85rem; line-height: 1.7; color: var(--muted); font-weight: 300; }
+
+/* COMO FUNCIONA */
+.como { padding: 7rem 4rem; background: var(--verde-xdark); position: relative; overflow: hidden; }
+.como::before { content: ''; position: absolute; top: -30%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(90,120,64,.3) 0%, transparent 65%); border-radius: 50%; }
+.como-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+.como .section-tag { color: var(--mel-light); }
+.como .section-title { color: var(--white); margin-bottom: 3.5rem; }
+.como .section-title em { color: var(--mel-light); }
+.passos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.passo { position: relative; }
+.passo-num { font-family: 'Cormorant Garamond', serif; font-size: 5rem; font-weight: 300; color: rgba(255,255,255,.08); line-height: 1; margin-bottom: -.5rem; }
+.passo-icon { font-size: 1.8rem; margin-bottom: 1rem; display: block; }
+.passo-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 500; color: var(--white); margin-bottom: .6rem; }
+.passo-body { font-size: .85rem; line-height: 1.7; color: rgba(255,255,255,.55); font-weight: 300; }
+.passo-arrow { position: absolute; top: 3rem; right: -1rem; color: rgba(255,255,255,.15); font-size: 1.5rem; }
+
+/* PRECO */
+.preco { padding: 7rem 4rem; background: var(--verde-cream); }
+.preco-inner { max-width: 500px; margin: 0 auto; text-align: center; }
+.preco-card { background: var(--white); border-radius: 2rem; padding: 3rem; border: 1px solid var(--verde-pale); box-shadow: 0 24px 60px rgba(45,61,30,.1); }
+.preco-badge { display: inline-block; background: var(--mel-pale); color: var(--mel); font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; padding: .4rem 1rem; border-radius: 2rem; margin-bottom: 1.5rem; }
+.preco-valor { font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 600; color: var(--verde-xdark); line-height: 1; }
+.preco-valor sup { font-size: 1.5rem; vertical-align: top; margin-top: .5rem; }
+.preco-valor span { font-size: 1.1rem; font-weight: 400; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+.preco-desc { font-size: .85rem; color: var(--muted); margin: .8rem 0 2rem; }
+.preco-list { list-style: none; text-align: left; margin-bottom: 2rem; display: flex; flex-direction: column; gap: .8rem; }
+.preco-list li { display: flex; align-items: center; gap: .7rem; font-size: .88rem; color: var(--ink); }
+.preco-list li::before { content: '✓'; width: 22px; height: 22px; background: var(--verde-pale); color: var(--verde-dark); border-radius: 50%; font-size: .7rem; font-weight: 700; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.preco-free { background: var(--verde-blush); border-radius: .8rem; padding: .8rem 1rem; font-size: .82rem; color: var(--verde-dark); text-align: center; margin-bottom: 1.5rem; font-weight: 500; }
+.btn-preco { display: block; width: 100%; background: var(--verde-xdark); color: var(--white); padding: 1.1rem; border-radius: 1rem; font-size: .95rem; font-weight: 500; text-decoration: none; text-align: center; transition: all .25s; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.btn-preco:hover { background: var(--verde); transform: translateY(-2px); box-shadow: 0 12px 28px rgba(45,61,30,.25); }
+
+/* CTA FINAL */
+.cta-final { padding: 7rem 4rem; background: var(--verde-blush); text-align: center; }
+.cta-final .section-title { margin-bottom: 1rem; }
+.cta-final p { font-size: 1rem; color: var(--muted); margin-bottom: 2.5rem; font-weight: 300; }
+.cta-final .btn-primary { margin: 0 auto; }
+
+/* FOOTER */
+footer { background: var(--verde-xdark); padding: 2.5rem 4rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.footer-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--white); }
+.footer-logo span { color: var(--mel-light); font-style: italic; }
+footer p { font-size: .78rem; color: rgba(255,255,255,.4); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@media (max-width: 900px) {
+  nav { padding: 1rem 1.5rem; }
+  .hero { padding: 7rem 1.5rem 4rem; }
+  .hero-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .hero-visual { order: -1; }
+  .float-card { display: none; }
+  .float-card-2 { display: none; }
+  .beneficios, .como, .preco, .cta-final { padding: 4rem 1.5rem; }
+  .ben-grid { grid-template-columns: 1fr; }
+  .passos { grid-template-columns: 1fr; gap: 2.5rem; }
+  .passo-arrow { display: none; }
+  footer { padding: 2rem 1.5rem; flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">Agenda<span>Studio</span></div>
+  <a href="cadastro.html" class="nav-cta">Começar grátis</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag"><div class="dot"></div> Para estúdios de beleza e depilação</div>
+      <h1 class="hero-title">Sua agenda cheia,<em>no piloto automático.</em></h1>
+      <p class="hero-body">Site profissional + agendamento online + painel de gestão. Tudo que seu estúdio precisa para crescer, em menos de 5 minutos.</p>
+      <div class="hero-btns">
+        <a href="cadastro.html" class="btn-primary">✨ Começar agora</a>
+        <a href="#como-funciona" class="btn-outline">Ver como funciona →</a>
+      </div>
+      <div class="hero-price">
+        <span class="valor">R$59,99</span>
+        <span class="periodo">/mês</span>
+        <span class="free">30 dias grátis</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="mockup-phone">
+        <div class="mockup-header">
+          <div class="mockup-avatar">🌿</div>
+          <div>
+            <div class="mockup-name">Studio Bella</div>
+            <div class="mockup-sub">Painel de agendamentos</div>
+          </div>
+        </div>
+        <div class="mockup-stat-row">
+          <div class="mockup-stat">
+            <div class="mockup-stat-num">12</div>
+            <div class="mockup-stat-label">Hoje</div>
+          </div>
+          <div class="mockup-stat">
+            <div class="mockup-stat-num">48</div>
+            <div class="mockup-stat-label">Semana</div>
+          </div>
+          <div class="mockup-stat">
+            <div class="mockup-stat-num">100%</div>
+            <div class="mockup-stat-label">Satisfação</div>
+          </div>
+        </div>
+        <div class="mockup-ag">
+          <div class="mockup-ag-item confirmado">
+            <div class="mockup-ag-time">09:00</div>
+            <div class="mockup-ag-info">
+              <div class="mockup-ag-nome">Ana Paula</div>
+              <div class="mockup-ag-svc">Pernas completas</div>
+            </div>
+            <span class="mockup-badge ok">✓ Confirmado</span>
+          </div>
+          <div class="mockup-ag-item pendente">
+            <div class="mockup-ag-time">10:30</div>
+            <div class="mockup-ag-info">
+              <div class="mockup-ag-nome">Juliana M.</div>
+              <div class="mockup-ag-svc">Virilha completa</div>
+            </div>
+            <span class="mockup-badge pend">Pendente</span>
+          </div>
+          <div class="mockup-ag-item confirmado">
+            <div class="mockup-ag-time">14:00</div>
+            <div class="mockup-ag-info">
+              <div class="mockup-ag-nome">Carla S.</div>
+              <div class="mockup-ag-svc">Corpo completo</div>
+            </div>
+            <span class="mockup-badge ok">✓ Confirmado</span>
+          </div>
+        </div>
+      </div>
+      <div class="float-card">
+        <p>Novos agendamentos</p>
+        <strong>+3 hoje 🎉</strong>
+      </div>
+      <div class="float-card-2">
+        <p>Próximo horário</p>
+        <strong>10:30 — Juliana</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFICIOS -->
+<section class="beneficios" id="beneficios">
+  <div class="section-center">
+    <div class="section-tag">Por que o AgendaStudio</div>
+    <h2 class="section-title">Tudo que seu estúdio precisa,<em>em um só lugar.</em></h2>
+  </div>
+  <div class="ben-grid">
+    <div class="ben-card">
+      <span class="ben-icon">🌐</span>
+      <div class="ben-title">Site profissional</div>
+      <p class="ben-body">Seu estúdio com um site bonito, com a sua identidade, pronto para compartilhar no Instagram e WhatsApp.</p>
+    </div>
+    <div class="ben-card">
+      <span class="ben-icon">📅</span>
+      <div class="ben-title">Agendamento online 24h</div>
+      <p class="ben-body">Clientes agendam sozinhos a qualquer hora. Sem você precisar responder mensagem por mensagem.</p>
+    </div>
+    <div class="ben-card">
+      <span class="ben-icon">📊</span>
+      <div class="ben-title">Painel de gestão</div>
+      <p class="ben-body">Veja todos os agendamentos do dia, confirme, cancele e gerencie horários bloqueados com facilidade.</p>
+    </div>
+    <div class="ben-card">
+      <span class="ben-icon">💬</span>
+      <div class="ben-title">Integração WhatsApp</div>
+      <p class="ben-body">Mande confirmações e lembretes direto pelo WhatsApp com um clique, sem digitar nada.</p>
+    </div>
+    <div class="ben-card">
+      <span class="ben-icon">🔒</span>
+      <div class="ben-title">Bloqueio de horários</div>
+      <p class="ben-body">Bloqueie dias, horários e períodos inteiros com facilidade. Férias, folga ou compromisso pessoal — sem confusão.</p>
+    </div>
+    <div class="ben-card">
+      <span class="ben-icon">📱</span>
+      <div class="ben-title">Funciona no celular</div>
+      <p class="ben-body">Painel e site totalmente responsivos. Gerencie tudo do seu celular, de onde você estiver.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="como" id="como-funciona">
+  <div class="como-inner">
+    <div class="section-center" style="max-width:100%;text-align:left;margin-bottom:3.5rem;">
+      <div class="section-tag">Como funciona</div>
+      <h2 class="section-title">Pronto em <em>3 passos simples.</em></h2>
+    </div>
+    <div class="passos">
+      <div class="passo">
+        <div class="passo-num">01</div>
+        <span class="passo-icon">✍️</span>
+        <div class="passo-title">Crie sua conta</div>
+        <p class="passo-body">Cadastre seu estúdio com e-mail e senha. Preencha o nome, WhatsApp e cidade — leva menos de 2 minutos.</p>
+        <div class="passo-arrow">→</div>
+      </div>
+      <div class="passo">
+        <div class="passo-num">02</div>
+        <span class="passo-icon">🎨</span>
+        <div class="passo-title">Seu sistema é gerado</div>
+        <p class="passo-body">Automaticamente você recebe seu site personalizado, link de agendamento e painel administrativo prontos para usar.</p>
+        <div class="passo-arrow">→</div>
+      </div>
+      <div class="passo">
+        <div class="passo-num">03</div>
+        <span class="passo-icon">🚀</span>
+        <div class="passo-title">Comece a receber clientes</div>
+        <p class="passo-body">Compartilhe seu link no Instagram e WhatsApp. Seus clientes já podem agendar online, 24 horas por dia.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRECO -->
+<section class="preco" id="cadastro">
+  <div class="section-center" style="margin-bottom:3rem;">
+    <div class="section-tag">Plano único</div>
+    <h2 class="section-title">Simples, sem surpresas.</h2>
+  </div>
+  <div class="preco-inner">
+    <div class="preco-card">
+      <div class="preco-badge">🍯 Plano completo</div>
+      <div class="preco-valor"><sup>R$</sup>59<span>,99/mês</span></div>
+      <p class="preco-desc">Tudo incluso. Sem taxas escondidas.</p>
+      <ul class="preco-list">
+        <li>Site profissional personalizado</li>
+        <li>Agendamento online 24h</li>
+        <li>Painel administrativo completo</li>
+        <li>Bloqueio de horários</li>
+        <li>Integração com WhatsApp</li>
+        <li>Suporte por e-mail</li>
+        <li>Atualizações incluídas</li>
+      </ul>
+      <div class="preco-free">🎁 30 dias grátis — sem precisar de cartão</div>
+      <a href="cadastro.html" class="btn-preco">Começar meu período grátis →</a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final">
+  <div class="section-tag">Pronto para começar?</div>
+  <h2 class="section-title">Seu estúdio merece uma <em>agenda cheia.</em></h2>
+  <p>Junte-se aos estúdios que já usam o AgendaStudio para crescer sem complicação.</p>
+  <a href="cadastro.html" class="btn-primary">✨ Criar minha conta grátis</a>
+</section>
+
+<footer>
+  <div class="footer-logo">Agenda<span>Studio</span></div>
+  <p>© 2026 AgendaStudio. Todos os direitos reservados.</p>
+</footer>
+
+<script>
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+}, { passive: true });
+</script>
+</body>
+</html>
