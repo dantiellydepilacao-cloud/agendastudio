@@ -24,6 +24,30 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 .loading-spinner { width: 36px; height: 36px; border: 3px solid var(--verde-pale); border-top-color: var(--verde); border-radius: 50%; animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* LOGIN */
+.login-screen { position: fixed; inset: 0; background: var(--verde-blush); display: none; align-items: center; justify-content: center; z-index: 998; padding: 1rem; }
+.login-screen.show { display: flex; }
+.login-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.6rem; padding: 2.5rem; width: 100%; max-width: 380px; text-align: center; }
+.login-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600; color: var(--verde-xdark); margin-bottom: .3rem; }
+.login-logo span { color: var(--mel); font-style: italic; }
+.login-sub { font-size: .78rem; color: var(--muted); margin-bottom: 2rem; }
+.login-field { margin-bottom: 1rem; text-align: left; }
+.login-field label { display: block; font-size: .78rem; color: var(--muted); margin-bottom: .4rem; font-weight: 500; }
+.login-field input { width: 100%; padding: .85rem 1rem; border: 1.5px solid var(--verde-pale); border-radius: .9rem; font-family: 'DM Sans', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s; }
+.login-field input:focus { border-color: var(--verde); }
+.login-err { font-size: .75rem; color: var(--red); margin-top: .5rem; display: none; }
+.login-err.show { display: block; }
+.btn-login { width: 100%; padding: .95rem; background: var(--verde-xdark); color: var(--white); border: none; border-radius: .9rem; font-family: 'DM Sans', sans-serif; font-size: .92rem; font-weight: 500; cursor: pointer; margin-top: .5rem; transition: all .2s; }
+.btn-login:hover { background: var(--verde); }
+.btn-login:disabled { opacity: .6; cursor: not-allowed; }
+.link-esqueci { display: block; margin-top: 1rem; font-size: .8rem; color: var(--muted); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; width: 100%; text-align: center; text-decoration: none; }
+.link-esqueci:hover { color: var(--verde-dark); }
+.link-cadastro { display: block; margin-top: .8rem; font-size: .8rem; color: var(--muted); }
+.link-cadastro a { color: var(--verde-dark); text-decoration: none; font-weight: 500; }
+.msg-recuperar { font-size: .78rem; margin-top: .6rem; display: none; padding: .5rem .8rem; border-radius: .6rem; }
+.msg-recuperar.ok { display: block; background: var(--green-light); color: var(--green); }
+.msg-recuperar.err { display: block; background: var(--red-light); color: var(--red); }
+
 /* NAV */
 .nav { background: var(--verde-xdark); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
 .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--white); }
@@ -142,6 +166,27 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 <div class="loading-screen" id="loading">
   <div class="loading-logo">Agenda<span>Studio</span></div>
   <div class="loading-spinner"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">Agenda<span>Studio</span></div>
+    <div class="login-sub">Acesse o painel do seu estúdio</div>
+    <div class="login-field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+    </div>
+    <div class="login-err" id="login-err">E-mail ou senha incorretos.</div>
+    <button class="btn-login" id="btn-login" onclick="fazerLogin()">Entrar no painel</button>
+    <button class="link-esqueci" onclick="enviarRecuperacao()">Esqueci minha senha</button>
+    <div class="msg-recuperar" id="msg-recuperar"></div>
+    <div class="link-cadastro">Não tem conta? <a href="cadastro.html">Cadastre-se grátis →</a></div>
+  </div>
 </div>
 
 <!-- PAINEL -->
@@ -299,7 +344,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getDatabase, ref, onValue, update, push, remove, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const firebaseConfig = {
@@ -326,15 +371,13 @@ setPersistence(auth, browserLocalPersistence).then(() => {
   window._remove = remove;
   window._set = set;
   window._signOut = signOut;
+  window._signIn = signInWithEmailAndPassword;
+  window._resetPassword = sendPasswordResetEmail;
 
   onAuthStateChanged(auth, (user) => {
   if (!user) {
-    // Aguarda 2s antes de redirecionar para dar tempo ao Firebase
-    setTimeout(() => {
-      onAuthStateChanged(auth, (u) => {
-        if (!u) window.location.href = 'cadastro.html';
-      });
-    }, 2000);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('login-screen').classList.add('show');
     return;
   }
 
@@ -385,7 +428,44 @@ const DIAS_SEMANA = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Dom
 
 function uid() { return window._uid; }
 
-// ABAS
+// LOGIN
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const err = document.getElementById('login-err');
+  const btn = document.getElementById('btn-login');
+  err.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  try {
+    await window._signIn(window._auth, email, senha);
+    document.getElementById('login-screen').classList.remove('show');
+  } catch(e) {
+    err.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Entrar no painel';
+  }
+}
+
+async function enviarRecuperacao() {
+  const email = document.getElementById('login-email').value.trim();
+  const msg = document.getElementById('msg-recuperar');
+  if (!email) {
+    msg.className = 'msg-recuperar err';
+    msg.textContent = 'Digite seu e-mail primeiro.';
+    return;
+  }
+  try {
+    await window._resetPassword(window._auth, email);
+    msg.className = 'msg-recuperar ok';
+    msg.textContent = '✅ Link enviado! Verifique seu e-mail.';
+  } catch(e) {
+    msg.className = 'msg-recuperar err';
+    msg.textContent = 'E-mail não encontrado.';
+  }
+}
+
+
 function mudarAba(aba, btn) {
   ['agenda','bloqueios','config','perfil'].forEach(a => {
     document.getElementById('aba-'+a).style.display = a === aba ? 'block' : 'none';
@@ -573,6 +653,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.mudarAba = mudarAba;
+window.fazerLogin = fazerLogin;
+window.enviarRecuperacao = enviarRecuperacao;
 window.fazerLogout = fazerLogout;
 window.carregarAgendamentos = carregarAgendamentos;
 window.atualizarStatus = atualizarStatus;
