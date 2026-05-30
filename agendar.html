@@ -356,9 +356,11 @@ document.getElementById('cliente-wa').addEventListener('input', function(e) {
 function renderServicos() {
   const grid = document.getElementById('servicos-grid');
   const lista = (window._studio && window._studio.servicos) ? window._studio.servicos : SERVICOS_PADRAO;
-  grid.innerHTML = lista.map(s => `
-    <button class="servico-btn" onclick="selecionarServico('${s}', this)">${s}</button>
-  `).join('');
+  grid.innerHTML = lista.map(s => {
+    const nome = typeof s === 'object' ? s.nome : s;
+    const valor = typeof s === 'object' && s.valor ? ` — R$ ${parseFloat(s.valor).toFixed(2)}` : '';
+    return `<button class="servico-btn" onclick="selecionarServico('${nome}', this)">${nome}${valor}</button>`;
+  }).join('');
 }
 
 function selecionarServico(nome, btn) {
