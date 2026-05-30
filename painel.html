@@ -245,6 +245,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
       <button class="tab" onclick="mudarAba('bloqueios', this)">🚫 Bloqueios</button>
       <button class="tab" onclick="mudarAba('config', this)">⚙️ Horários</button>
       <button class="tab" onclick="mudarAba('perfil', this)">🏪 Meu Estúdio</button>
+      <button class="tab" onclick="mudarAba('financeiro', this)">💰 Financeiro</button>
     </div>
 
     <!-- ABA AGENDA -->
@@ -355,6 +356,56 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
         <div id="lista-servicos" style="display:flex;flex-wrap:wrap;gap:.5rem;"></div>
       </div>
 
+      <div class="perfil-card">
+        <h3>Serviços oferecidos</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;">Esses serviços aparecerão para seus clientes na página de agendamento.</p>
+        <div style="display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;">
+          <input type="text" id="novo-servico" placeholder="Nome do serviço..." style="flex:2;min-width:160px;padding:.75rem 1rem;border:1.5px solid var(--verde-pale);border-radius:.8rem;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
+          <input type="number" id="novo-servico-valor" placeholder="Valor R$" min="0" step="0.01" style="flex:1;min-width:100px;padding:.75rem 1rem;border:1.5px solid var(--verde-pale);border-radius:.8rem;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;">
+          <button onclick="adicionarServico()" style="background:var(--verde-xdark);color:var(--white);border:none;border-radius:.8rem;padding:.75rem 1.2rem;font-size:.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">+ Adicionar</button>
+        </div>
+        <div id="lista-servicos"></div>
+      </div>
+
+    </div>
+
+    <!-- ABA FINANCEIRO -->
+    <div id="aba-financeiro" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.8rem;">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--verde-xdark);">Fechamento mensal</div>
+        <select id="filtro-mes-fin" onchange="carregarFinanceiro()" style="padding:.55rem .9rem;border:1.5px solid var(--verde-pale);border-radius:.7rem;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;background:var(--white);">
+        </select>
+      </div>
+
+      <!-- RESUMO -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;" id="fin-stats">
+        <div style="background:var(--white);border:1px solid var(--verde-pale);border-radius:1.2rem;padding:1.2rem 1.4rem;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--verde-xdark);" id="fin-total-agendamentos">0</div>
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.3rem;">Agendamentos</div>
+        </div>
+        <div style="background:var(--verde-cream);border:1px solid var(--verde-light);border-radius:1.2rem;padding:1.2rem 1.4rem;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--verde-dark);" id="fin-total-valor">R$ 0</div>
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.3rem;">Faturamento</div>
+        </div>
+        <div style="background:var(--white);border:1px solid var(--mel-pale);border-radius:1.2rem;padding:1.2rem 1.4rem;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--mel);" id="fin-ticket-medio">R$ 0</div>
+          <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:.3rem;">Ticket médio</div>
+        </div>
+      </div>
+
+      <!-- TABELA POR SERVIÇO -->
+      <div style="background:var(--white);border:1px solid var(--verde-pale);border-radius:1.2rem;padding:1.4rem;margin-bottom:1.2rem;">
+        <div style="font-size:.78rem;font-weight:600;color:var(--verde-dark);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.1em;">Por serviço</div>
+        <div id="fin-por-servico"></div>
+      </div>
+
+      <!-- LISTA DE AGENDAMENTOS -->
+      <div style="background:var(--white);border:1px solid var(--verde-pale);border-radius:1.2rem;padding:1.4rem;">
+        <div style="font-size:.78rem;font-weight:600;color:var(--verde-dark);margin-bottom:1rem;text-transform:uppercase;letter-spacing:.1em;">Todos os agendamentos do mês</div>
+        <div id="fin-lista"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -447,6 +498,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     carregarAgendamentos();
     carregarBloqueios();
     carregarConfig();
+    iniciarFiltroMes();
   }, { onlyOnce: true });
   });
 }); // setPersistence
@@ -503,11 +555,12 @@ async function enviarRecuperacao() {
 
 
 function mudarAba(aba, btn) {
-  ['agenda','bloqueios','config','perfil'].forEach(a => {
+  ['agenda','bloqueios','config','perfil','financeiro'].forEach(a => {
     document.getElementById('aba-'+a).style.display = a === aba ? 'block' : 'none';
   });
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
+  if (aba === 'financeiro') carregarFinanceiro();
 }
 
 // TOAST
@@ -679,19 +732,25 @@ function renderServicos() {
     return;
   }
   el.innerHTML = _servicos.map((s, i) => `
-    <div style="display:flex;align-items:center;gap:.4rem;background:var(--verde-cream);border:1px solid var(--verde-pale);border-radius:2rem;padding:.35rem .9rem;">
-      <span style="font-size:.82rem;color:var(--verde-dark);">${s}</span>
-      <button onclick="removerServico(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:.85rem;line-height:1;">✕</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border:1px solid var(--verde-pale);border-radius:.8rem;margin-bottom:.5rem;background:var(--verde-blush);">
+      <div>
+        <div style="font-size:.88rem;font-weight:500;color:var(--ink);">${s.nome}</div>
+        <div style="font-size:.75rem;color:var(--muted);">R$ ${parseFloat(s.valor||0).toFixed(2)}</div>
+      </div>
+      <button onclick="removerServico(${i})" style="background:var(--red-light);color:var(--red);border:none;border-radius:.5rem;padding:.25rem .6rem;font-size:.72rem;cursor:pointer;">✕</button>
     </div>
   `).join('');
 }
 
 async function adicionarServico() {
-  const input = document.getElementById('novo-servico');
-  const nome = input.value.trim();
+  const nomeInput = document.getElementById('novo-servico');
+  const valorInput = document.getElementById('novo-servico-valor');
+  const nome = nomeInput.value.trim();
+  const valor = parseFloat(valorInput.value) || 0;
   if (!nome) return;
-  _servicos.push(nome);
-  input.value = '';
+  _servicos.push({nome, valor});
+  nomeInput.value = '';
+  valorInput.value = '';
   renderServicos();
   await salvarServicos();
   showToast('✅ Serviço adicionado!');
@@ -706,6 +765,90 @@ async function removerServico(idx) {
 
 async function salvarServicos() {
   await window._set(window._ref(window._db, `studios/${uid()}/servicos`), _servicos);
+}
+
+// FINANCEIRO
+function carregarFinanceiro() {
+  const sel = document.getElementById('filtro-mes-fin');
+  const mesSel = sel.value;
+  if (!mesSel) return;
+
+  window._onValue(window._ref(window._db, `studios/${uid()}/agendamentos`), (snap) => {
+    const dados = snap.val() || {};
+    const todos = Object.values(dados);
+    const doMes = todos.filter(a => a.data && a.data.startsWith(mesSel) && a.status !== 'cancelado');
+
+    // Monta mapa de valores dos serviços
+    const valoresMap = {};
+    (_servicos || []).forEach(s => { valoresMap[s.nome] = s.valor || 0; });
+
+    // Calcula totais
+    let totalValor = 0;
+    const porServico = {};
+    doMes.forEach(a => {
+      const svc = a.servico || 'Outros';
+      const val = valoresMap[svc] || 0;
+      totalValor += val;
+      if (!porServico[svc]) porServico[svc] = { qtd: 0, total: 0 };
+      porServico[svc].qtd++;
+      porServico[svc].total += val;
+    });
+
+    const ticketMedio = doMes.length ? totalValor / doMes.length : 0;
+
+    document.getElementById('fin-total-agendamentos').textContent = doMes.length;
+    document.getElementById('fin-total-valor').textContent = `R$ ${totalValor.toFixed(2)}`;
+    document.getElementById('fin-ticket-medio').textContent = `R$ ${ticketMedio.toFixed(2)}`;
+
+    // Por serviço
+    const porSvcEl = document.getElementById('fin-por-servico');
+    if (!Object.keys(porServico).length) {
+      porSvcEl.innerHTML = '<div style="font-size:.85rem;color:var(--muted);text-align:center;padding:1rem;">Nenhum agendamento neste mês.</div>';
+    } else {
+      porSvcEl.innerHTML = Object.entries(porServico).sort((a,b) => b[1].total - a[1].total).map(([nome, d]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem 0;border-bottom:1px solid var(--verde-cream);">
+          <div>
+            <div style="font-size:.88rem;font-weight:500;">${nome}</div>
+            <div style="font-size:.72rem;color:var(--muted);">${d.qtd} agendamento${d.qtd>1?'s':''}</div>
+          </div>
+          <div style="font-size:.95rem;font-weight:600;color:var(--verde-dark);">R$ ${d.total.toFixed(2)}</div>
+        </div>
+      `).join('');
+    }
+
+    // Lista completa
+    const listaEl = document.getElementById('fin-lista');
+    if (!doMes.length) {
+      listaEl.innerHTML = '<div style="font-size:.85rem;color:var(--muted);text-align:center;padding:1rem;">Nenhum agendamento neste mês.</div>';
+    } else {
+      listaEl.innerHTML = doMes.sort((a,b) => (a.data+a.hora).localeCompare(b.data+b.hora)).map(a => {
+        const [y,m,d] = (a.data||'').split('-');
+        const val = valoresMap[a.servico] || 0;
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--verde-cream);flex-wrap:wrap;gap:.3rem;">
+            <div>
+              <div style="font-size:.85rem;font-weight:500;">${a.nome||'Cliente'}</div>
+              <div style="font-size:.72rem;color:var(--muted);">${a.servico||''} · ${d||''}/${m||''} às ${a.hora||''}</div>
+            </div>
+            <div style="font-size:.88rem;font-weight:600;color:var(--verde-dark);">R$ ${val.toFixed(2)}</div>
+          </div>
+        `;
+      }).join('');
+    }
+  }, { onlyOnce: true });
+}
+
+function iniciarFiltroMes() {
+  const sel = document.getElementById('filtro-mes-fin');
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const agora = new Date();
+  let html = '';
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    html += `<option value="${val}" ${i===0?'selected':''}>${meses[d.getMonth()]} ${d.getFullYear()}</option>`;
+  }
+  sel.innerHTML = html;
 }
 
 // PERFIL
@@ -735,6 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.adicionarServico = adicionarServico;
 window.removerServico = removerServico;
+window.carregarFinanceiro = carregarFinanceiro;
 window.copiarLink = copiarLink;
 window.mudarAba = mudarAba;
 window.fazerLogin = fazerLogin;
