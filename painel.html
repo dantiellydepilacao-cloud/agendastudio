@@ -521,7 +521,6 @@ function carregarAgendamentos() {
     const deHoje = todos.filter(a => a.data === hoje && a.status !== 'cancelado');
     const proximos = todos.filter(a => {
       if (a.data < hoje) return false;
-      if (filtroData && a.data !== filtroData) return false;
       if (filtroStatus && a.status !== filtroStatus) return false;
       return true;
     }).sort((a,b) => (a.data+a.hora).localeCompare(b.data+b.hora));
