@@ -390,8 +390,7 @@ function renderCalendario() {
   for (let d = 1; d <= diasNoMes; d++) {
     const data = new Date(calAno, calMes, d);
     const dataStr = `${calAno}-${String(calMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isPast = data < new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    const diaSemana = data.getDay();
+    const isPast = data < new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());    const diaSemana = data.getDay();
     const diasAtendimento = window._diasAtendimento || [0,1,2,3,4,5];
     // Converte: Firebase usa 0=Segunda, nosso calendário 0=Domingo
     const diaFB = diaSemana === 0 ? 6 : diaSemana - 1;
@@ -447,7 +446,9 @@ async function selecionarData(dataStr, btn) {
     if (b.data === dataStr) horasOcupadas.add(b.hora);
   });
 
-  const horarios = window._horarios || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+  const agora = new Date();
+  const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+  const isHoje = dataStr === `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
 
   if (!horarios.length) {
     grid.innerHTML = '<div class="no-horarios">Nenhum horário configurado.</div>';
@@ -456,9 +457,13 @@ async function selecionarData(dataStr, btn) {
 
   grid.innerHTML = horarios.map(h => {
     const ocupado = horasOcupadas.has(h);
-    return `<button class="hora-btn ${ocupado?'ocupado':''}" 
-      ${ocupado?'disabled':''} 
-      onclick="selecionarHora('${h}', this)">${h}</button>`;
+    const [hh, mm] = h.split(':').map(Number);
+    const horarioMin = hh * 60 + mm;
+    const passado = isHoje && horarioMin <= horaAtual;
+    const indisponivel = ocupado || passado;
+    return `<button class="hora-btn ${indisponivel?'ocupado':''}" 
+      ${indisponivel?'disabled':''} 
+      onclick="selecionarHora('${h}', this)">${h}${passado&&!ocupado?' ✕':''}</button>`;
   }).join('');
 }
 
