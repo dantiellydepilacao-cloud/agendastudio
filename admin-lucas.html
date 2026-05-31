@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgendaStudio — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde-xdark: #2d3d1e; --verde-dark: #3a4f2a; --verde: #5a7840;
+  --verde-pale: #d8e8c0; --verde-cream: #f0f7e4; --verde-blush: #f7fbf0;
+  --mel: #b87820; --mel-pale: #f5e8c8;
+  --white: #ffffff; --ink: #1a2410; --muted: #6a8050;
+  --red: #c0392b; --red-light: #fdf0ef; --green: #27ae60; --green-light: #eafaf1;
+  --orange: #e67e22; --orange-light: #fef5ec;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color: var(--ink); min-height: 100vh; }
+
+/* LOGIN */
+.login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.login-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.6rem; padding: 2.5rem; width: 100%; max-width: 360px; text-align: center; }
+.login-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--verde-xdark); }
+.login-logo span { color: var(--mel); font-style: italic; }
+.login-badge { display: inline-block; background: var(--mel-pale); color: var(--mel); font-size: .7rem; font-weight: 600; padding: .25rem .8rem; border-radius: 2rem; margin: .4rem 0 1.5rem; text-transform: uppercase; letter-spacing: .1em; }
+.login-field { margin-bottom: 1rem; text-align: left; }
+.login-field label { display: block; font-size: .75rem; color: var(--muted); margin-bottom: .4rem; font-weight: 500; }
+.login-field input { width: 100%; padding: .85rem 1rem; border: 1.5px solid var(--verde-pale); border-radius: .9rem; font-family: 'DM Sans', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s; }
+.login-field input:focus { border-color: var(--verde); }
+.login-err { font-size: .75rem; color: var(--red); margin-bottom: .8rem; display: none; }
+.login-err.show { display: block; }
+.btn-login { width: 100%; padding: .95rem; background: var(--verde-xdark); color: var(--white); border: none; border-radius: .9rem; font-family: 'DM Sans', sans-serif; font-size: .92rem; font-weight: 500; cursor: pointer; }
+.btn-login:hover { opacity: .9; }
+
+/* NAV */
+.nav { background: var(--verde-xdark); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 600; color: var(--white); }
+.nav-logo span { color: var(--mel); font-style: italic; }
+.nav-badge { font-size: .65rem; background: var(--mel); color: var(--white); padding: .2rem .6rem; border-radius: 1rem; margin-left: .5rem; text-transform: uppercase; letter-spacing: .1em; }
+.btn-logout { background: rgba(255,255,255,.1); color: var(--white); border: 1px solid rgba(255,255,255,.2); border-radius: .5rem; padding: .35rem .9rem; font-size: .78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+/* BODY */
+.admin-body { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; padding: 1.2rem 1.4rem; }
+.stat-num { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 500; color: var(--verde-xdark); line-height: 1; }
+.stat-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: .3rem; }
+.stat-card.verde { background: var(--verde-cream); border-color: var(--verde-pale); }
+.stat-card.verde .stat-num { color: var(--verde-dark); }
+.stat-card.mel { border-color: var(--mel-pale); }
+.stat-card.mel .stat-num { color: var(--mel); }
+.stat-card.red { border-color: #f5c6c2; }
+.stat-card.red .stat-num { color: var(--red); }
+
+/* FILTROS */
+.filter-bar { display: flex; gap: .8rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
+.filter-bar input, .filter-bar select { padding: .55rem .9rem; border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .82rem; outline: none; background: var(--white); }
+.filter-bar input { min-width: 220px; }
+.btn-refresh { padding: .55rem 1.2rem; background: var(--verde-cream); border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-size: .8rem; cursor: pointer; color: var(--verde-dark); font-family: 'DM Sans', sans-serif; }
+
+/* TABELA */
+.table-wrap { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.2rem; overflow: hidden; }
+.table-header { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1.2fr; gap: 1rem; padding: .9rem 1.4rem; background: var(--verde-cream); border-bottom: 1px solid var(--verde-pale); }
+.table-header span { font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.studio-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1.2fr; gap: 1rem; padding: 1rem 1.4rem; border-bottom: 1px solid var(--verde-cream); align-items: center; transition: background .15s; }
+.studio-row:last-child { border-bottom: none; }
+.studio-row:hover { background: var(--verde-blush); }
+.studio-nome { font-weight: 500; font-size: .9rem; color: var(--ink); }
+.studio-tipo { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+.studio-email { font-size: .78rem; color: var(--muted); }
+.badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .7rem; font-weight: 600; padding: .25rem .7rem; border-radius: 1rem; }
+.badge-trial { background: var(--mel-pale); color: var(--mel); }
+.badge-ativo { background: var(--green-light); color: var(--green); }
+.badge-expirado { background: var(--red-light); color: var(--red); }
+.badge-bloqueado { background: #f0f0f0; color: #888; }
+.dias-restantes { font-size: .78rem; color: var(--muted); }
+.dias-critico { color: var(--red); font-weight: 500; }
+.acoes { display: flex; gap: .4rem; }
+.btn-sm { padding: .3rem .7rem; border-radius: .5rem; font-size: .72rem; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: all .15s; }
+.btn-ativar { background: var(--green-light); color: var(--green); }
+.btn-ativar:hover { background: #d5f5e3; }
+.btn-bloquear { background: var(--red-light); color: var(--red); }
+.btn-bloquear:hover { background: #fadbd8; }
+.btn-trial { background: var(--mel-pale); color: var(--mel); }
+.btn-trial:hover { background: #fdebd0; }
+.btn-ver { background: var(--verde-cream); color: var(--verde-dark); }
+.btn-ver:hover { background: var(--verde-pale); }
+.empty { text-align: center; padding: 3rem; color: var(--muted); font-size: .88rem; }
+
+/* MODAL DETALHES */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--white); border-radius: 1.4rem; padding: 2rem; width: 100%; max-width: 500px; }
+.modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--verde-xdark); margin-bottom: 1.2rem; }
+.detail-row { display: flex; justify-content: space-between; padding: .6rem 0; border-bottom: 1px solid var(--verde-cream); font-size: .85rem; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: var(--muted); font-size: .75rem; }
+.detail-val { font-weight: 500; }
+.modal-acoes { display: flex; gap: .6rem; margin-top: 1.2rem; flex-wrap: wrap; }
+.btn-modal { padding: .65rem 1.2rem; border-radius: .8rem; font-size: .85rem; font-weight: 500; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--verde-xdark); color: var(--white); padding: .75rem 1.8rem; border-radius: 2rem; font-size: .83rem; display: none; z-index: 500; }
+.toast.show { display: block; }
+
+@media (max-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .table-header, .studio-row { grid-template-columns: 1fr; }
+  .table-header { display: none; }
+  .studio-row { gap: .4rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">Agenda<span>Studio</span></div>
+      <div class="login-badge">Painel Admin</div>
+      <div class="login-field">
+        <label>E-mail</label>
+        <input type="email" id="login-email" placeholder="admin@email.com" value="severolucas396@gmail.com">
+      </div>
+      <div class="login-field">
+        <label>Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+      </div>
+      <div class="login-err" id="login-err">E-mail ou senha incorretos.</div>
+      <button class="btn-login" onclick="fazerLogin()">Entrar no painel admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painel-screen" style="display:none;">
+  <nav class="nav">
+    <div>
+      <span class="nav-logo">Agenda<span>Studio</span></span>
+      <span class="nav-badge">Admin</span>
+    </div>
+    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+  </nav>
+
+  <div class="admin-body">
+    <div class="stats-grid">
+      <div class="stat-card verde">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">Total de estúdios</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-ativos">0</div>
+        <div class="stat-label">Planos ativos</div>
+      </div>
+      <div class="stat-card mel">
+        <div class="stat-num" id="stat-trial">0</div>
+        <div class="stat-label">Em trial</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-num" id="stat-expirados">0</div>
+        <div class="stat-label">Expirados</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="filtro-busca" placeholder="🔍 Buscar estúdio..." oninput="filtrarEstudios()">
+      <select id="filtro-status" onchange="filtrarEstudios()">
+        <option value="">Todos os status</option>
+        <option value="ativo">Ativo</option>
+        <option value="trial">Trial</option>
+        <option value="expirado">Expirado</option>
+        <option value="bloqueado">Bloqueado</option>
+      </select>
+      <button class="btn-refresh" onclick="carregarEstudios()">↻ Atualizar</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <span>Estúdio</span>
+        <span>E-mail</span>
+        <span>Status</span>
+        <span>Dias restantes</span>
+        <span>Cadastro</span>
+        <span>Ações</span>
+      </div>
+      <div id="lista-estudios"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES -->
+<div class="modal-overlay" id="modal-detalhes">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-nome">Estúdio</div>
+    <div id="modal-conteudo"></div>
+    <div class="modal-acoes">
+      <button class="btn-modal btn-ativar" onclick="ativarPlano(window._studioSelecionado)">✅ Ativar plano</button>
+      <button class="btn-modal btn-trial" onclick="resetarTrial(window._studioSelecionado)">🎁 Resetar trial</button>
+      <button class="btn-modal btn-bloquear" onclick="bloquearStudio(window._studioSelecionado)">🚫 Bloquear</button>
+      <button class="btn-modal" style="background:var(--verde-cream);color:var(--verde-dark);" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, onValue, update, set } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDFjY1CpVjOcm_dtQpatvBSm1RfxnhU0bg",
+  authDomain: "agendastudio-a994c.firebaseapp.com",
+  databaseURL: "https://agendastudio-a994c-default-rtdb.firebaseio.com",
+  projectId: "agendastudio-a994c",
+  storageBucket: "agendastudio-a994c.firebasestorage.app",
+  messagingSenderId: "535468750451",
+  appId: "1:535468750451:web:c26095d9353bf5ed739c06"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const ADMIN_EMAIL = 'severolucas396@gmail.com';
+
+window._auth = auth;
+window._db = db;
+window._ref = ref;
+window._onValue = onValue;
+window._update = update;
+window._set = set;
+window._signOut = signOut;
+window._signIn = signInWithEmailAndPassword;
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email === ADMIN_EMAIL) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('painel-screen').style.display = 'block';
+    carregarEstudios();
+  } else if (user && user.email !== ADMIN_EMAIL) {
+    signOut(auth);
+    document.getElementById('login-err').textContent = 'Acesso não autorizado.';
+    document.getElementById('login-err').classList.add('show');
+  } else {
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('painel-screen').style.display = 'none';
+  }
+});
+</script>
+
+<script>
+let todosEstudios = [];
+
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const err = document.getElementById('login-err');
+  err.classList.remove('show');
+  try {
+    await window._signIn(window._auth, email, senha);
+  } catch(e) {
+    err.classList.add('show');
+    err.textContent = 'E-mail ou senha incorretos.';
+  }
+}
+
+async function fazerLogout() {
+  await window._signOut(window._auth);
+}
+
+function carregarEstudios() {
+  window._onValue(window._ref(window._db, 'studios'), (snap) => {
+    const dados = snap.val() || {};
+    todosEstudios = Object.entries(dados).map(([uid, s]) => ({ uid, ...s }));
+    filtrarEstudios();
+    atualizarStats();
+  }, { onlyOnce: true });
+}
+
+function atualizarStats() {
+  const agora = new Date();
+  let ativos = 0, trial = 0, expirados = 0;
+
+  todosEstudios.forEach(s => {
+    const status = calcularStatus(s);
+    if (status === 'ativo') ativos++;
+    else if (status === 'trial') trial++;
+    else if (status === 'expirado') expirados++;
+  });
+
+  document.getElementById('stat-total').textContent = todosEstudios.length;
+  document.getElementById('stat-ativos').textContent = ativos;
+  document.getElementById('stat-trial').textContent = trial;
+  document.getElementById('stat-expirados').textContent = expirados;
+}
+
+function calcularStatus(s) {
+  if (s.plano === 'bloqueado') return 'bloqueado';
+  if (s.plano === 'ativo') {
+    if (s.planoVencimento && new Date(s.planoVencimento) < new Date()) return 'expirado';
+    return 'ativo';
+  }
+  if (s.plano === 'trial' && s.trialInicio) {
+    const dias = 30 - Math.floor((new Date() - new Date(s.trialInicio)) / (1000*60*60*24));
+    if (dias <= 0) return 'expirado';
+    return 'trial';
+  }
+  return 'trial';
+}
+
+function diasRestantes(s) {
+  if (s.plano === 'ativo' && s.planoVencimento) {
+    const dias = Math.ceil((new Date(s.planoVencimento) - new Date()) / (1000*60*60*24));
+    return dias > 0 ? `${dias}d` : 'Vencido';
+  }
+  if (s.trialInicio) {
+    const dias = 30 - Math.floor((new Date() - new Date(s.trialInicio)) / (1000*60*60*24));
+    return dias > 0 ? `${dias}d trial` : 'Expirado';
+  }
+  return '—';
+}
+
+function filtrarEstudios() {
+  const busca = document.getElementById('filtro-busca').value.toLowerCase();
+  const statusFiltro = document.getElementById('filtro-status').value;
+
+  let lista = todosEstudios.filter(s => {
+    const status = calcularStatus(s);
+    const matchBusca = !busca || 
+      (s.nomeStudio||'').toLowerCase().includes(busca) || 
+      (s.email||'').toLowerCase().includes(busca) ||
+      (s.cidade||'').toLowerCase().includes(busca);
+    const matchStatus = !statusFiltro || status === statusFiltro;
+    return matchBusca && matchStatus;
+  });
+
+  const el = document.getElementById('lista-estudios');
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty">Nenhum estúdio encontrado.</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(s => {
+    const status = calcularStatus(s);
+    const dias = diasRestantes(s);
+    const critico = dias.includes('d') && parseInt(dias) <= 5;
+    const cadastro = s.criadoEm ? new Date(s.criadoEm).toLocaleDateString('pt-BR') : '—';
+
+    return `
+      <div class="studio-row">
+        <div>
+          <div class="studio-nome">${s.nomeStudio || 'Sem nome'}</div>
+          <div class="studio-tipo">${s.tipoServico || ''} · ${s.cidade || ''}</div>
+        </div>
+        <div class="studio-email">${s.email || '—'}</div>
+        <div><span class="badge badge-${status}">${traduzirStatus(status)}</span></div>
+        <div class="dias-restantes ${critico?'dias-critico':''}">${dias}</div>
+        <div style="font-size:.78rem;color:var(--muted);">${cadastro}</div>
+        <div class="acoes">
+          <button class="btn-sm btn-ver" onclick="verDetalhes('${s.uid}')">👁️ Ver</button>
+          ${status !== 'ativo' ? `<button class="btn-sm btn-ativar" onclick="ativarPlano('${s.uid}')">✅</button>` : ''}
+          ${status !== 'bloqueado' ? `<button class="btn-sm btn-bloquear" onclick="bloquearStudio('${s.uid}')">🚫</button>` : `<button class="btn-sm btn-ativar" onclick="ativarPlano('${s.uid}')">🔓</button>`}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function traduzirStatus(s) {
+  return {ativo:'✅ Ativo', trial:'🎁 Trial', expirado:'❌ Expirado', bloqueado:'🚫 Bloqueado'}[s] || s;
+}
+
+function verDetalhes(uid) {
+  const s = todosEstudios.find(x => x.uid === uid);
+  if (!s) return;
+  window._studioSelecionado = uid;
+  document.getElementById('modal-nome').textContent = s.nomeStudio || 'Estúdio';
+
+  const status = calcularStatus(s);
+  const cadastro = s.criadoEm ? new Date(s.criadoEm).toLocaleDateString('pt-BR') : '—';
+  const ultimoPag = s.ultimoPagamento ? new Date(s.ultimoPagamento).toLocaleDateString('pt-BR') : '—';
+  const vencimento = s.planoVencimento ? new Date(s.planoVencimento).toLocaleDateString('pt-BR') : '—';
+
+  document.getElementById('modal-conteudo').innerHTML = `
+    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val"><span class="badge badge-${status}">${traduzirStatus(status)}</span></span></div>
+    <div class="detail-row"><span class="detail-label">E-mail</span><span class="detail-val">${s.email||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">WhatsApp</span><span class="detail-val">${s.whatsapp||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Tipo de serviço</span><span class="detail-val">${s.tipoServico||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Cidade</span><span class="detail-val">${s.cidade||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Instagram</span><span class="detail-val">${s.instagram?'@'+s.instagram:'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Responsável</span><span class="detail-val">${s.nomeResponsavel||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Cadastro</span><span class="detail-val">${cadastro}</span></div>
+    <div class="detail-row"><span class="detail-label">Último pagamento</span><span class="detail-val">${ultimoPag}</span></div>
+    <div class="detail-row"><span class="detail-label">Vencimento do plano</span><span class="detail-val">${vencimento}</span></div>
+    <div class="detail-row"><span class="detail-label">Dias restantes</span><span class="detail-val">${diasRestantes(s)}</span></div>
+  `;
+
+  document.getElementById('modal-detalhes').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('modal-detalhes').classList.remove('open');
+}
+
+async function ativarPlano(uid) {
+  const agora = new Date();
+  const vencimento = new Date(agora.getFullYear(), agora.getMonth() + 1, agora.getDate());
+  await window._update(window._ref(window._db, `studios/${uid}`), {
+    plano: 'ativo',
+    planoVencimento: vencimento.toISOString(),
+    ultimoPagamento: agora.toISOString()
+  });
+  showToast('✅ Plano ativado!');
+  fecharModal();
+  carregarEstudios();
+}
+
+async function bloquearStudio(uid) {
+  await window._update(window._ref(window._db, `studios/${uid}`), { plano: 'bloqueado' });
+  showToast('🚫 Estúdio bloqueado');
+  fecharModal();
+  carregarEstudios();
+}
+
+async function resetarTrial(uid) {
+  await window._update(window._ref(window._db, `studios/${uid}`), {
+    plano: 'trial',
+    trialInicio: new Date().toISOString(),
+    planoVencimento: null
+  });
+  showToast('🎁 Trial resetado por 30 dias!');
+  fecharModal();
+  carregarEstudios();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+document.getElementById('modal-detalhes').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+window.fazerLogin = fazerLogin;
+window.fazerLogout = fazerLogout;
+window.carregarEstudios = carregarEstudios;
+window.filtrarEstudios = filtrarEstudios;
+window.verDetalhes = verDetalhes;
+window.fecharModal = fecharModal;
+window.ativarPlano = ativarPlano;
+window.bloquearStudio = bloquearStudio;
+window.resetarTrial = resetarTrial;
+</script>
+</body>
+</html>
