@@ -556,7 +556,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
   window._signIn = signInWithEmailAndPassword;
   window._resetPassword = sendPasswordResetEmail;
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
   if (!user) {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('login-screen').classList.add('show');
@@ -565,7 +565,27 @@ setPersistence(auth, browserLocalPersistence).then(() => {
 
   window._uid = user.uid;
 
-  // Carrega dados do estúdio
+  // Busca o plano primeiro via REST para verificar bloqueio
+  try {
+    const token = await user.getIdToken();
+    const resp = await fetch(`https://agendastudio-a994c-default-rtdb.firebaseio.com/studios/${user.uid}/plano.json?auth=${token}`);
+    const plano = await resp.json();
+
+    if (plano === 'bloqueado') {
+      document.getElementById('bloqueio-icon').textContent = '🚫';
+      document.getElementById('bloqueio-titulo').textContent = 'Conta suspensa';
+      document.getElementById('bloqueio-msg').textContent = 'Sua conta foi suspensa. Entre em contato com o suporte para mais informações.';
+      document.getElementById('bloqueio-btn').style.display = 'none';
+      document.getElementById('bloqueio-pagamento').style.display = 'none';
+      document.getElementById('tela-bloqueio').style.display = 'flex';
+      document.getElementById('loading').style.display = 'none';
+      return;
+    }
+  } catch(e) {
+    console.log('Erro ao verificar plano:', e);
+  }
+
+  // Carrega dados completos do estúdio
   onValue(ref(db, `studios/${user.uid}`), (snap) => {
     const dados = snap.val() || {};
     window._dadosStudio = dados;
