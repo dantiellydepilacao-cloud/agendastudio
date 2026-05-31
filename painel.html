@@ -294,9 +294,30 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
     <!-- ABA CONFIG -->
     <div id="aba-config" style="display:none;">
       <div class="config-card">
-        <h3>Horários disponíveis para agendamento</h3>
-        <div class="config-grid" id="config-horarios"></div>
-        <button class="btn-salvar" onclick="salvarConfig()">Salvar horários</button>
+        <h3>Configurar horários de atendimento</h3>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:1.2rem;">Defina o horário de início, fim e o intervalo entre atendimentos. Os horários serão gerados automaticamente.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.2rem;">
+          <div class="form-group-b">
+            <label>Início</label>
+            <input type="time" id="config-inicio" value="08:00">
+          </div>
+          <div class="form-group-b">
+            <label>Fim</label>
+            <input type="time" id="config-fim" value="18:00">
+          </div>
+          <div class="form-group-b">
+            <label>Intervalo</label>
+            <select id="config-intervalo" style="padding:.55rem .8rem;border:1.5px solid var(--verde-pale);border-radius:.7rem;font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+              <option value="30">30 minutos</option>
+              <option value="60" selected>1 hora</option>
+              <option value="90">1h30</option>
+              <option value="120">2 horas</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-salvar" onclick="previewHorarios()" style="background:var(--verde-cream);color:var(--verde-dark);border:1.5px solid var(--verde-pale);margin-bottom:.8rem;">👁️ Ver horários gerados</button>
+        <div id="config-preview" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;"></div>
+        <button class="btn-salvar" onclick="salvarConfig()">Salvar configuração</button>
       </div>
       <div class="config-card">
         <h3>Dias de atendimento</h3>
@@ -505,7 +526,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
 </script>
 
 <script>
-const HORARIOS_PADRAO = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+const DIAS_SEMANA_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const DIAS_SEMANA = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 
 function uid() { return window._uid; }
@@ -695,17 +716,42 @@ async function removerBloqueio(id) {
 }
 
 // CONFIG
+function gerarHorarios(inicio, fim, intervalo) {
+  const horarios = [];
+  const [hi, mi] = inicio.split(':').map(Number);
+  const [hf, mf] = fim.split(':').map(Number);
+  let total = hi * 60 + mi;
+  const fimTotal = hf * 60 + mf;
+  while (total < fimTotal) {
+    const h = String(Math.floor(total/60)).padStart(2,'0');
+    const m = String(total%60).padStart(2,'0');
+    horarios.push(`${h}:${m}`);
+    total += parseInt(intervalo);
+  }
+  return horarios;
+}
+
+function previewHorarios() {
+  const inicio = document.getElementById('config-inicio').value || '08:00';
+  const fim = document.getElementById('config-fim').value || '18:00';
+  const intervalo = document.getElementById('config-intervalo').value || '60';
+  const horarios = gerarHorarios(inicio, fim, intervalo);
+  const el = document.getElementById('config-preview');
+  el.innerHTML = horarios.map(h => `
+    <span style="background:var(--verde-cream);border:1px solid var(--verde-pale);border-radius:2rem;padding:.25rem .7rem;font-size:.78rem;color:var(--verde-dark);">${h}</span>
+  `).join('');
+}
+
 function carregarConfig() {
   window._onValue(window._ref(window._db, `studios/${uid()}/config`), (snap) => {
     const cfg = snap.val() || {};
-    const horarios = cfg.horarios || HORARIOS_PADRAO;
     const dias = cfg.dias || [0,1,2,3,4,5];
 
-    document.getElementById('config-horarios').innerHTML = HORARIOS_PADRAO.map(h => `
-      <label class="config-slot">
-        <input type="checkbox" value="${h}" ${horarios.includes(h)?'checked':''}> ${h}
-      </label>
-    `).join('');
+    if (cfg.inicio) document.getElementById('config-inicio').value = cfg.inicio;
+    if (cfg.fim) document.getElementById('config-fim').value = cfg.fim;
+    if (cfg.intervalo) document.getElementById('config-intervalo').value = cfg.intervalo;
+
+    previewHorarios();
 
     document.getElementById('config-dias').innerHTML = DIAS_SEMANA.map((d,i) => `
       <label class="config-slot">
@@ -716,9 +762,13 @@ function carregarConfig() {
 }
 
 async function salvarConfig() {
-  const horarios = [...document.querySelectorAll('#config-horarios input:checked')].map(i=>i.value);
+  const inicio = document.getElementById('config-inicio').value || '08:00';
+  const fim = document.getElementById('config-fim').value || '18:00';
+  const intervalo = document.getElementById('config-intervalo').value || '60';
   const dias = [...document.querySelectorAll('#config-dias input:checked')].map(i=>parseInt(i.value));
-  await window._set(window._ref(window._db, `studios/${uid()}/config`), {horarios, dias});
+  const horarios = gerarHorarios(inicio, fim, intervalo);
+  await window._set(window._ref(window._db, `studios/${uid()}/config`), {inicio, fim, intervalo, horarios, dias});
+  previewHorarios();
   showToast('✅ Configurações salvas!');
 }
 
@@ -889,6 +939,7 @@ window.atualizarStatus = atualizarStatus;
 window.abrirWA = abrirWA;
 window.adicionarBloqueio = adicionarBloqueio;
 window.removerBloqueio = removerBloqueio;
+window.previewHorarios = previewHorarios;
 window.salvarConfig = salvarConfig;
 window.salvarPerfil = salvarPerfil;
 </script>
