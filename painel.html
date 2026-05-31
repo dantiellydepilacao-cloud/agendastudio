@@ -207,12 +207,44 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 
   <!-- TELA DE BLOQUEIO -->
   <div id="tela-bloqueio" style="display:none;position:fixed;inset:0;background:var(--verde-blush);z-index:997;align-items:center;justify-content:center;padding:1rem;">
-    <div style="background:var(--white);border:1px solid var(--verde-pale);border-radius:1.6rem;padding:2.5rem;width:100%;max-width:420px;text-align:center;">
+    <div style="background:var(--white);border:1px solid var(--verde-pale);border-radius:1.6rem;padding:2.5rem;width:100%;max-width:440px;text-align:center;">
       <div style="font-size:3rem;margin-bottom:1rem;" id="bloqueio-icon">🔒</div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--verde-xdark);margin-bottom:.6rem;" id="bloqueio-titulo">Acesso suspenso</div>
       <p style="font-size:.88rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;" id="bloqueio-msg">Seu período gratuito encerrou. Assine o AgendaStudio para continuar usando o sistema.</p>
-      <button onclick="abrirModalAssinar()" style="width:100%;padding:1rem;background:var(--verde-xdark);color:var(--white);border:none;border-radius:.9rem;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;margin-bottom:.8rem;" id="bloqueio-btn">✨ Assinar agora — R$59,99/mês</button>
-      <button onclick="fazerLogout()" style="width:100%;padding:.8rem;background:transparent;color:var(--muted);border:1.5px solid var(--verde-pale);border-radius:.9rem;font-family:'DM Sans',sans-serif;font-size:.85rem;cursor:pointer;">Sair</button>
+      
+      <!-- Opções de pagamento direto na tela de bloqueio -->
+      <div id="bloqueio-pagamento" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem;">
+        <button onclick="assinar('cartao')" style="padding:1.2rem;border:2px solid var(--verde-pale);border-radius:1rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
+          <div style="font-size:1.5rem;margin-bottom:.4rem;">💳</div>
+          <div style="font-size:.88rem;font-weight:500;color:var(--ink);">Cartão</div>
+          <div style="font-size:.72rem;color:var(--muted);">Recorrente automático</div>
+        </button>
+        <button onclick="assinar('pix')" style="padding:1.2rem;border:2px solid var(--verde-pale);border-radius:1rem;background:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
+          <div style="font-size:1.5rem;margin-bottom:.4rem;">📱</div>
+          <div style="font-size:.88rem;font-weight:500;color:var(--ink);">PIX</div>
+          <div style="font-size:.72rem;color:var(--muted);">Pagar agora</div>
+        </button>
+      </div>
+
+      <div style="background:var(--verde-cream);border-radius:.8rem;padding:.7rem;font-size:.8rem;color:var(--verde-dark);margin-bottom:1rem;">
+        🌿 <strong>R$59,99/mês</strong> · Cancele quando quiser
+      </div>
+
+      <!-- QR Code PIX na tela de bloqueio -->
+      <div id="bloqueio-pix-wrap" style="display:none;margin-bottom:1rem;">
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:.8rem;">Escaneie o QR Code:</div>
+        <img id="bloqueio-pix-qr" src="" alt="QR Code PIX" style="width:160px;height:160px;border-radius:.8rem;">
+        <div style="margin-top:.8rem;">
+          <div style="font-size:.72rem;color:var(--muted);margin-bottom:.3rem;">Ou copie o código PIX:</div>
+          <div id="bloqueio-pix-code" onclick="copiarPixBloqueio()" style="font-size:.65rem;background:#f5f5f5;padding:.5rem;border-radius:.5rem;word-break:break-all;cursor:pointer;"></div>
+          <div style="font-size:.72rem;color:var(--green);margin-top:.3rem;display:none;" id="bloqueio-pix-copiado">✅ Copiado!</div>
+        </div>
+      </div>
+
+      <div id="bloqueio-loading" style="display:none;font-size:.85rem;color:var(--muted);margin-bottom:.8rem;">⏳ Processando...</div>
+      <div id="bloqueio-err" style="display:none;font-size:.8rem;color:var(--red);background:var(--red-light);padding:.6rem;border-radius:.6rem;margin-bottom:.8rem;"></div>
+
+      <button id="bloqueio-btn" onclick="fazerLogout()" style="width:100%;padding:.8rem;background:transparent;color:var(--muted);border:1.5px solid var(--verde-pale);border-radius:.9rem;font-family:'DM Sans',sans-serif;font-size:.85rem;cursor:pointer;">Sair</button>
     </div>
   </div>
   <div id="modal-plano-ativo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
@@ -934,8 +966,9 @@ function fecharModalAssinar() {
 }
 
 async function assinar(tipo) {
-  const loading = document.getElementById('assinar-loading');
-  const err = document.getElementById('assinar-err');
+  const isBloqueio = document.getElementById('tela-bloqueio').style.display === 'flex';
+  const loading = document.getElementById(isBloqueio ? 'bloqueio-loading' : 'assinar-loading');
+  const err = document.getElementById(isBloqueio ? 'bloqueio-err' : 'assinar-err');
   loading.style.display = 'block';
   err.style.display = 'none';
 
@@ -957,14 +990,21 @@ async function assinar(tipo) {
 
     if (tipo === 'cartao' && data.url) {
       window.open(data.url, '_blank');
-      fecharModalAssinar();
+      if (!isBloqueio) fecharModalAssinar();
     }
 
     if (tipo === 'pix' && data.qr_code_base64) {
-      document.getElementById('pix-qr').src = `data:image/png;base64,${data.qr_code_base64}`;
-      document.getElementById('pix-code').textContent = data.qr_code;
-      document.getElementById('pix-wrap').style.display = 'block';
-      window._pixCode = data.qr_code;
+      if (isBloqueio) {
+        document.getElementById('bloqueio-pix-qr').src = `data:image/png;base64,${data.qr_code_base64}`;
+        document.getElementById('bloqueio-pix-code').textContent = data.qr_code;
+        document.getElementById('bloqueio-pix-wrap').style.display = 'block';
+        window._pixCode = data.qr_code;
+      } else {
+        document.getElementById('pix-qr').src = `data:image/png;base64,${data.qr_code_base64}`;
+        document.getElementById('pix-code').textContent = data.qr_code;
+        document.getElementById('pix-wrap').style.display = 'block';
+        window._pixCode = data.qr_code;
+      }
     }
 
     if (data.error) {
@@ -977,6 +1017,12 @@ async function assinar(tipo) {
     err.style.display = 'block';
     err.textContent = 'Erro de conexão. Tente novamente.';
   }
+}
+
+function copiarPixBloqueio() {
+  navigator.clipboard.writeText(window._pixCode || '');
+  document.getElementById('bloqueio-pix-copiado').style.display = 'block';
+  setTimeout(() => document.getElementById('bloqueio-pix-copiado').style.display = 'none', 2000);
 }
 
 function copiarPix() {
@@ -1099,6 +1145,7 @@ window.abrirModalAssinar = abrirModalAssinar;
 window.fecharModalAssinar = fecharModalAssinar;
 window.assinar = assinar;
 window.copiarPix = copiarPix;
+window.copiarPixBloqueio = copiarPixBloqueio;
 window.adicionarServico = adicionarServico;
 window.removerServico = removerServico;
 window.carregarFinanceiro = carregarFinanceiro;
