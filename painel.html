@@ -205,7 +205,31 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
     <button class="btn-assinar" onclick="abrirModalAssinar()">Assinar agora — R$59,99/mês</button>
   </div>
 
-  <!-- MODAL ASSINATURA -->
+  <!-- MODAL PLANO ATIVO -->
+  <div id="modal-plano-ativo" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#fff;border-radius:1.6rem;padding:2.5rem;width:100%;max-width:420px;text-align:center;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--verde-xdark);margin-bottom:.4rem;">Plano ativado!</div>
+      <div style="font-size:.88rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;">Bem-vinda ao AgendaStudio! Seu plano está ativo e sua agenda já está funcionando para receber clientes.</div>
+      
+      <div style="background:var(--verde-cream);border:1px solid var(--verde-pale);border-radius:1rem;padding:1.2rem;margin-bottom:1.5rem;text-align:left;">
+        <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--verde-pale);">
+          <span style="font-size:.78rem;color:var(--muted);">Plano</span>
+          <span style="font-size:.85rem;font-weight:600;color:var(--verde-dark);">AgendaStudio Mensal</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--verde-pale);">
+          <span style="font-size:.78rem;color:var(--muted);">Valor</span>
+          <span style="font-size:.85rem;font-weight:600;color:var(--verde-dark);">R$ 59,99/mês</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:.5rem 0;">
+          <span style="font-size:.78rem;color:var(--muted);">Próxima cobrança</span>
+          <span style="font-size:.85rem;font-weight:600;color:var(--verde-dark);" id="modal-vencimento">—</span>
+        </div>
+      </div>
+
+      <button onclick="fecharModalPlanoAtivo()" style="width:100%;padding:.95rem;background:var(--verde-xdark);color:#fff;border:none;border-radius:.9rem;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:500;cursor:pointer;">Começar a usar →</button>
+    </div>
+  </div>
   <div id="modal-assinar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center;padding:1rem;">
     <div style="background:#fff;border-radius:1.4rem;padding:2rem;width:100%;max-width:420px;text-align:center;">
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--verde-xdark);margin-bottom:.4rem;">Assinar AgendaStudio</div>
@@ -519,8 +543,26 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     document.getElementById('bv-nome').textContent = dados.nomeStudio || 'Estúdio';
     document.getElementById('bv-sub').textContent = `${dados.tipoServico || ''} · ${dados.cidade || ''}`;
 
-    // Trial banner
-    if (dados.plano === 'trial' && dados.trialInicio) {
+    // Trial/Plano banner
+    if (dados.plano === 'ativo') {
+      document.getElementById('trial-banner').style.display = 'none';
+
+      // Verifica se acabou de ativar (últimos 5 minutos)
+      if (dados.ultimoPagamento) {
+        const ultimoPag = new Date(dados.ultimoPagamento);
+        const agora = new Date();
+        const diff = (agora - ultimoPag) / 1000 / 60;
+        if (diff < 5) {
+          // Mostra modal de boas-vindas
+          if (dados.planoVencimento) {
+            const v = new Date(dados.planoVencimento);
+            document.getElementById('modal-vencimento').textContent = 
+              `${String(v.getDate()).padStart(2,'0')}/${String(v.getMonth()+1).padStart(2,'0')}/${v.getFullYear()}`;
+          }
+          document.getElementById('modal-plano-ativo').style.display = 'flex';
+        }
+      }
+    } else if (dados.plano === 'trial' && dados.trialInicio) {
       const inicio = new Date(dados.trialInicio);
       const agora = new Date();
       const dias = 30 - Math.floor((agora - inicio) / (1000*60*60*24));
@@ -854,6 +896,10 @@ async function salvarServicos() {
   await window._set(window._ref(window._db, `studios/${uid()}/servicos`), _servicos);
 }
 
+function fecharModalPlanoAtivo() {
+  document.getElementById('modal-plano-ativo').style.display = 'none';
+}
+
 // ASSINATURA
 function abrirModalAssinar() {
   document.getElementById('modal-assinar').style.display = 'flex';
@@ -1027,6 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bloquear-data').value = hoje;
 });
 
+window.fecharModalPlanoAtivo = fecharModalPlanoAtivo;
 window.abrirModalAssinar = abrirModalAssinar;
 window.fecharModalAssinar = fecharModalAssinar;
 window.assinar = assinar;
