@@ -745,6 +745,11 @@ async function fazerLogout() {
   document.getElementById('painel-wrap').style.display = 'none';
   document.getElementById('tela-bloqueio').style.display = 'none';
   document.getElementById('login-screen').classList.add('show');
+  document.getElementById('btn-login').disabled = false;
+  document.getElementById('btn-login').textContent = 'Entrar no painel';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-senha').value = '';
+  document.getElementById('login-err').classList.remove('show');
 }
 
 // AGENDAMENTOS
