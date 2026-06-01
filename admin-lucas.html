@@ -54,6 +54,21 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
 .stat-card.red { border-color: #f5c6c2; }
 .stat-card.red .stat-num { color: var(--red); }
 
+/* RENDA */
+.renda-section { background: var(--white); border: 1px solid var(--verde-pale); border-radius: 1.4rem; padding: 1.6rem; margin-bottom: 2rem; }
+.renda-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; flex-wrap: wrap; gap: .8rem; }
+.renda-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--verde-xdark); }
+.renda-mes-sel { padding: .5rem .9rem; border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .82rem; outline: none; background: var(--white); }
+.renda-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.2rem; }
+.renda-card { background: var(--verde-blush); border: 1px solid var(--verde-pale); border-radius: 1rem; padding: 1rem 1.2rem; text-align: center; }
+.renda-card.destaque { background: var(--verde-cream); border-color: var(--verde-pale); }
+.renda-valor { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 500; color: var(--verde-xdark); line-height: 1; }
+.renda-card.destaque .renda-valor { color: var(--verde-dark); font-size: 2.2rem; }
+.renda-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin-top: .3rem; }
+.renda-projecao { background: var(--mel-pale); border-radius: .8rem; padding: .9rem 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+.renda-projecao span { font-size: .82rem; color: #7a5010; }
+.renda-projecao strong { font-size: 1rem; color: var(--mel); font-family: 'Cormorant Garamond', serif; }
+
 /* FILTROS */
 .filter-bar { display: flex; gap: .8rem; margin-bottom: 1.2rem; flex-wrap: wrap; align-items: center; }
 .filter-bar input, .filter-bar select { padding: .55rem .9rem; border: 1.5px solid var(--verde-pale); border-radius: .7rem; font-family: 'DM Sans', sans-serif; font-size: .82rem; outline: none; background: var(--white); }
@@ -165,8 +180,33 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
       </div>
     </div>
 
-    <div class="filter-bar">
-      <input type="text" id="filtro-busca" placeholder="🔍 Buscar estúdio..." oninput="filtrarEstudios()">
+    <!-- RENDA MENSAL -->
+    <div class="renda-section">
+      <div class="renda-header">
+        <div class="renda-title">💰 Renda mensal</div>
+        <select class="renda-mes-sel" id="renda-mes" onchange="calcularRenda()"></select>
+      </div>
+      <div class="renda-grid">
+        <div class="renda-card destaque">
+          <div class="renda-valor" id="renda-total">R$ 0</div>
+          <div class="renda-label">Receita do mês</div>
+        </div>
+        <div class="renda-card">
+          <div class="renda-valor" id="renda-qtd-ativos">0</div>
+          <div class="renda-label">Assinantes pagantes</div>
+        </div>
+        <div class="renda-card">
+          <div class="renda-valor" id="renda-qtd-trial">0</div>
+          <div class="renda-label">Em período grátis</div>
+        </div>
+      </div>
+      <div class="renda-projecao">
+        <span>📈 Projeção próximo mês (ativos atuais)</span>
+        <strong id="renda-projecao">R$ 0</strong>
+      </div>
+    </div>
+
+    <div class="filter-bar">      <input type="text" id="filtro-busca" placeholder="🔍 Buscar estúdio..." oninput="filtrarEstudios()">
       <select id="filtro-status" onchange="filtrarEstudios()">
         <option value="">Todos os status</option>
         <option value="ativo">Ativo</option>
@@ -279,6 +319,8 @@ function carregarEstudios() {
     todosEstudios = Object.entries(dados).map(([uid, s]) => ({ uid, ...s }));
     filtrarEstudios();
     atualizarStats();
+    iniciarFiltroRenda();
+    calcularRenda();
   }, { onlyOnce: true });
 }
 
@@ -371,6 +413,48 @@ function filtrarEstudios() {
   }).join('');
 }
 
+function calcularRenda() {
+  const mes = document.getElementById('renda-mes').value;
+  const VALOR_PLANO = 59.99;
+
+  const ativos = todosEstudios.filter(s => {
+    const status = calcularStatus(s);
+    if (status !== 'ativo') return false;
+    if (!mes) return true;
+    // Verifica se o pagamento foi neste mês
+    if (s.ultimoPagamento) {
+      const pag = new Date(s.ultimoPagamento);
+      const pagMes = `${pag.getFullYear()}-${String(pag.getMonth()+1).padStart(2,'0')}`;
+      return pagMes === mes;
+    }
+    return false;
+  });
+
+  const trial = todosEstudios.filter(s => calcularStatus(s) === 'trial');
+  const totalAtivosAgora = todosEstudios.filter(s => calcularStatus(s) === 'ativo').length;
+
+  const receita = ativos.length * VALOR_PLANO;
+  const projecao = totalAtivosAgora * VALOR_PLANO;
+
+  document.getElementById('renda-total').textContent = `R$ ${receita.toFixed(2)}`;
+  document.getElementById('renda-qtd-ativos').textContent = ativos.length;
+  document.getElementById('renda-qtd-trial').textContent = trial.length;
+  document.getElementById('renda-projecao').textContent = `R$ ${projecao.toFixed(2)}`;
+}
+
+function iniciarFiltroRenda() {
+  const sel = document.getElementById('renda-mes');
+  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const agora = new Date();
+  let html = '';
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(agora.getFullYear(), agora.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    html += `<option value="${val}" ${i===0?'selected':''}>${meses[d.getMonth()]} ${d.getFullYear()}</option>`;
+  }
+  sel.innerHTML = html;
+}
+
 function traduzirStatus(s) {
   return {ativo:'✅ Ativo', trial:'🎁 Trial', expirado:'❌ Expirado', bloqueado:'🚫 Bloqueado'}[s] || s;
 }
@@ -449,6 +533,7 @@ document.getElementById('modal-detalhes').addEventListener('click', function(e) 
   if (e.target === this) fecharModal();
 });
 
+window.calcularRenda = calcularRenda;
 window.fazerLogin = fazerLogin;
 window.fazerLogout = fazerLogout;
 window.carregarEstudios = carregarEstudios;
