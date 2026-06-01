@@ -117,6 +117,9 @@ nav {
   .form-row { grid-template-columns: 1fr; }
 }
 </style>
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init('Zecb2SZWu3l5b4yTl');</script>
 </head>
 <body>
 
@@ -402,6 +405,18 @@ async function cadastrar() {
       criadoEm: new Date().toISOString(),
       ativo: true
     });
+
+    // Envia e-mail de boas-vindas
+    try {
+      await emailjs.send('service_eqsq5yh', '3dio40o', {
+        nome_studio: nomeStudio,
+        nome_responsavel: nomeResponsavel,
+        email: email,
+        studio_id: uid
+      });
+    } catch(emailErr) {
+      console.log('Erro ao enviar e-mail:', emailErr);
+    }
 
     // Sucesso — redireciona automaticamente
     btn.textContent = '✅ Conta criada! Entrando no painel...';
