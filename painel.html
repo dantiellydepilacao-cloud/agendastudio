@@ -207,7 +207,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--verde-blush); color
           <div style="font-size:.72rem;color:var(--muted);">Pagar agora</div>
         </button>
       </div>
-      <div style="background:var(--verde-cream);border-radius:.8rem;padding:.7rem;font-size:.8rem;color:var(--verde-dark);margin-bottom:1rem;">
+      <div id="bloqueio-preco" style="background:var(--verde-cream);border-radius:.8rem;padding:.7rem;font-size:.8rem;color:var(--verde-dark);margin-bottom:1rem;">
         🌿 <strong>R$59,99/mês</strong> · Cancele quando quiser
       </div>
       <div id="bloqueio-pix-wrap" style="display:none;margin-bottom:1rem;">
@@ -591,9 +591,9 @@ setPersistence(auth, browserLocalPersistence).then(() => {
       document.getElementById('bloqueio-icon').textContent = '🚫';
       document.getElementById('bloqueio-titulo').textContent = 'Conta suspensa';
       document.getElementById('bloqueio-msg').textContent = 'Sua conta foi suspensa. Entre em contato com o suporte para mais informações.';
-      document.getElementById('bloqueio-btn').style.display = 'none';
       document.getElementById('bloqueio-pagamento').style.display = 'none';
-      document.querySelector('[style*="R$59,99"]').style.display = 'none';
+      document.getElementById('bloqueio-preco').style.display = 'none';
+      document.getElementById('bloqueio-btn').style.display = 'block';
       document.getElementById('tela-bloqueio').style.display = 'flex';
       document.getElementById('loading').style.display = 'none';
       document.getElementById('painel-wrap').style.display = 'none';
