@@ -742,7 +742,9 @@ function showToast(msg) {
 // LOGOUT
 async function fazerLogout() {
   await window._signOut(window._auth);
-  window.location.href = 'index.html';
+  document.getElementById('painel-wrap').style.display = 'none';
+  document.getElementById('tela-bloqueio').style.display = 'none';
+  document.getElementById('login-screen').classList.add('show');
 }
 
 // AGENDAMENTOS
