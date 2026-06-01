@@ -450,6 +450,8 @@ async function selecionarData(dataStr, btn) {
   const horaAtual = agora.getHours() * 60 + agora.getMinutes();
   const isHoje = dataStr === `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
 
+  const horarios = window._horarios || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+
   if (!horarios.length) {
     grid.innerHTML = '<div class="no-horarios">Nenhum horário configurado.</div>';
     return;
