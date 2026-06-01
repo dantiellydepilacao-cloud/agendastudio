@@ -592,8 +592,11 @@ setPersistence(auth, browserLocalPersistence).then(() => {
       document.getElementById('bloqueio-titulo').textContent = 'Conta suspensa';
       document.getElementById('bloqueio-msg').textContent = 'Sua conta foi suspensa. Entre em contato com o suporte para mais informações.';
       document.getElementById('bloqueio-btn').style.display = 'none';
+      document.getElementById('bloqueio-pagamento').style.display = 'none';
+      document.querySelector('[style*="R$59,99"]').style.display = 'none';
       document.getElementById('tela-bloqueio').style.display = 'flex';
       document.getElementById('loading').style.display = 'none';
+      document.getElementById('painel-wrap').style.display = 'none';
       return;
     }
 
