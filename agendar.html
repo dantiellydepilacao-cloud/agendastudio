@@ -291,42 +291,35 @@ if (!studioId) {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('error-screen').classList.add('show');
 } else {
-  // Carrega dados do estúdio
-  const studioRef = ref(db, `studios/${studioId}`);
-  get(studioRef).then((snap) => {
-    if (!snap.exists()) {
+  // Carrega dados públicos do estúdio via API segura
+  fetch(`/api/studio?studioId=${studioId}`)
+    .then(r => r.json())
+    .then(studio => {
+      if (studio.error) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-screen').classList.add('show');
+        return;
+      }
+
+      window._studio = studio;
+      window._studioId = studioId;
+      window._diasAtendimento = studio.diasAtendimento || [0,1,2,3,4,5];
+
+      document.getElementById('studio-nome').textContent = studio.nomeStudio || 'Estúdio';
+      document.getElementById('studio-tipo').textContent = studio.tipoServico || '';
+      document.getElementById('studio-cidade').textContent = studio.cidade || '';
+      document.title = `Agendar — ${studio.nomeStudio}`;
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('main-wrap').style.display = 'block';
+
+      renderServicos();
+      renderCalendario();
+    })
+    .catch(() => {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('error-screen').classList.add('show');
-      return;
-    }
-
-    const studio = snap.val();
-    window._studio = studio;
-    window._studioId = studioId;
-    window._db = db;
-    window._ref = ref;
-    window._push = push;
-    window._get = get;
-
-    document.getElementById('studio-nome').textContent = studio.nomeStudio || 'Estúdio';
-    document.getElementById('studio-tipo').textContent = studio.tipoServico || '';
-    document.getElementById('studio-cidade').textContent = studio.cidade || '';
-    document.title = `Agendar — ${studio.nomeStudio}`;
-
-    // Carrega config de horários
-    const configRef = ref(db, `studios/${studioId}/config`);
-    get(configRef).then((cSnap) => {
-      const cfg = cSnap.val() || {};
-      window._horarios = cfg.horarios || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
-      window._diasAtendimento = cfg.dias || [0,1,2,3,4,5];
     });
-
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('main-wrap').style.display = 'block';
-
-    renderServicos();
-    renderCalendario();
-  });
 }
 </script>
 
@@ -423,50 +416,38 @@ async function selecionarData(dataStr, btn) {
   document.querySelectorAll('.cal-dia').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
 
-  // Carrega horários disponíveis
+  // Carrega horários via API segura
   const cardHorarios = document.getElementById('card-horarios');
   cardHorarios.style.display = 'block';
   const grid = document.getElementById('horarios-grid');
   grid.innerHTML = '<div class="no-horarios">Carregando horários...</div>';
 
-  // Busca agendamentos e bloqueios do dia
-  const [agSnap, blSnap] = await Promise.all([
-    window._get(window._ref(window._db, `studios/${window._studioId}/agendamentos`)),
-    window._get(window._ref(window._db, `studios/${window._studioId}/bloqueios`))
-  ]);
+  try {
+    const resp = await fetch(`/api/horarios?studioId=${window._studioId}&data=${dataStr}`);
+    const dados = await resp.json();
 
-  const agendamentos = agSnap.val() || {};
-  const bloqueios = blSnap.val() || {};
+    if (!dados.horarios || !dados.horarios.length) {
+      grid.innerHTML = '<div class="no-horarios">Nenhum horário configurado.</div>';
+      return;
+    }
 
-  const horasOcupadas = new Set();
-  Object.values(agendamentos).forEach(a => {
-    if (a.data === dataStr && a.status !== 'cancelado') horasOcupadas.add(a.hora);
-  });
-  Object.values(bloqueios).forEach(b => {
-    if (b.data === dataStr) horasOcupadas.add(b.hora);
-  });
+    const agora = new Date();
+    const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+    const isHoje = dataStr === `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
 
-  const agora = new Date();
-  const horaAtual = agora.getHours() * 60 + agora.getMinutes();
-  const isHoje = dataStr === `${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}-${String(agora.getDate()).padStart(2,'0')}`;
+    grid.innerHTML = dados.horarios.map(({ hora, disponivel }) => {
+      const [hh, mm] = hora.split(':').map(Number);
+      const horarioMin = hh * 60 + mm;
+      const passado = isHoje && horarioMin <= horaAtual;
+      const indisponivel = !disponivel || passado;
+      return `<button class="hora-btn ${indisponivel?'ocupado':''}" 
+        ${indisponivel?'disabled':''} 
+        onclick="selecionarHora('${hora}', this)">${hora}${passado&&disponivel?' ✕':''}</button>`;
+    }).join('');
 
-  const horarios = window._horarios || ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
-
-  if (!horarios.length) {
-    grid.innerHTML = '<div class="no-horarios">Nenhum horário configurado.</div>';
-    return;
+  } catch(e) {
+    grid.innerHTML = '<div class="no-horarios">Erro ao carregar horários.</div>';
   }
-
-  grid.innerHTML = horarios.map(h => {
-    const ocupado = horasOcupadas.has(h);
-    const [hh, mm] = h.split(':').map(Number);
-    const horarioMin = hh * 60 + mm;
-    const passado = isHoje && horarioMin <= horaAtual;
-    const indisponivel = ocupado || passado;
-    return `<button class="hora-btn ${indisponivel?'ocupado':''}" 
-      ${indisponivel?'disabled':''} 
-      onclick="selecionarHora('${h}', this)">${h}${passado&&!ocupado?' ✕':''}</button>`;
-  }).join('');
 }
 
 function selecionarHora(hora, btn) {
@@ -529,15 +510,30 @@ async function confirmarAgendamento() {
   const whatsapp = document.getElementById('cliente-wa').value.trim();
 
   try {
-    await window._push(window._ref(window._db, `studios/${window._studioId}/agendamentos`), {
-      nome,
-      whatsapp,
-      servico: servicoSelecionado,
-      data: dataSelecionada,
-      hora: horaSelecionada,
-      status: 'pendente',
-      criadoEm: new Date().toISOString()
+    const resp = await fetch('/api/agendar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        studioId: window._studioId,
+        nome, whatsapp,
+        servico: servicoSelecionado,
+        data: dataSelecionada,
+        hora: horaSelecionada
+      })
     });
+
+    const resultado = await resp.json();
+
+    if (resultado.error) {
+      btn.disabled = false;
+      btn.textContent = '✅ Confirmar agendamento';
+      if (resultado.error === 'Horário já ocupado') {
+        alert('Este horário acabou de ser ocupado. Por favor escolha outro.');
+      } else {
+        alert('Erro ao agendar. Tente novamente.');
+      }
+      return;
+    }
 
     // Sucesso
     document.getElementById('passo-4').style.display = 'none';
@@ -549,7 +545,6 @@ async function confirmarAgendamento() {
       Aguarde a confirmação do estúdio.
     `;
 
-    // Link WhatsApp do estúdio
     if (window._studio.whatsapp) {
       const num = window._studio.whatsapp.replace(/\D/g,'');
       const msg = `Olá! Acabei de agendar ${servicoSelecionado} para ${d}/${m}/${y} às ${horaSelecionada}. Meu nome é ${nome}.`;
@@ -561,7 +556,7 @@ async function confirmarAgendamento() {
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '✅ Confirmar agendamento';
-    alert('Erro ao agendar. Tente novamente.');
+    alert('Erro de conexão. Tente novamente.');
   }
 }
 </script>
