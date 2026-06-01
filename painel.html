@@ -577,7 +577,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     console.log('Erro ao verificar plano:', e);
   }
 
-  // Carrega dados completos do estúdio
+  // Carrega dados completos do estúdio (tempo real)
   onValue(ref(db, `studios/${user.uid}`), (snap) => {
     const dados = snap.val() || {};
     window._dadosStudio = dados;
@@ -664,7 +664,7 @@ setPersistence(auth, browserLocalPersistence).then(() => {
     carregarBloqueios();
     carregarConfig();
     iniciarFiltroMes();
-  }, { onlyOnce: true });
+  });
   });
 }); // setPersistence
 </script>
